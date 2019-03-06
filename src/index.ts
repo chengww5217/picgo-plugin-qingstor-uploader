@@ -1,12 +1,11 @@
-import PicGo from 'picgo/dist/core/PicGo'
+import picgo from 'picgo'
 import { PluginConfig } from 'picgo/dist/utils/interfaces'
 import crypto from 'crypto'
-import mime from 'mime-types'
 
 // generate QingStor signature
 const generateSignature = (options: any, fileName: string): string => {
   const date = new Date().toUTCString()
-  const strToSign = `PUT\n\n${mime.lookup(fileName)}\n${date}\n/${options.bucket}/${options.path}${fileName}`
+  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}/${encodeURI(options.path)}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
@@ -35,19 +34,18 @@ const postOptions = (options: any, fileName: string, signature: string, image: B
   const url = getHost(options.customUrl)
   return {
     method: 'PUT',
-    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(options.path)}${encodeURI(fileName)}`,
+    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(options.path)}/${encodeURI(fileName)}`,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
-      Date: new Date().toUTCString(),
-      'content-type': mime.lookup(fileName)
+      Date: new Date().toUTCString()
     },
     body: image,
     resolveWithFullResponse: true
   }
 }
 
-const handle = async (ctx: PicGo): Promise<PicGo> => {
+const handle = async (ctx: picgo): Promise<picgo> => {
   const qingstorOptions = ctx.getConfig('picBed.qingstor-uploader')
   if (!qingstorOptions) {
     throw new Error('Can\'t find the qingstor config')
@@ -68,7 +66,7 @@ const handle = async (ctx: PicGo): Promise<PicGo> => {
         delete imgList[i].base64Image
         delete imgList[i].buffer
         const url = getHost(customUrl)
-        imgList[i]['imgUrl'] = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${path}${imgList[i].fileName}`
+        imgList[i]['imgUrl'] = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${encodeURI(path)}/${imgList[i].fileName}`
       } else {
         throw new Error('Upload failed')
       }
@@ -90,7 +88,7 @@ const handle = async (ctx: PicGo): Promise<PicGo> => {
   }
 }
 
-const config = (ctx: PicGo): PluginConfig[] => {
+const config = (ctx: picgo): PluginConfig[] => {
   let userConfig = ctx.getConfig('picBed.qingstor-uploader')
   if (!userConfig) {
     userConfig = {}
@@ -145,7 +143,7 @@ const config = (ctx: PicGo): PluginConfig[] => {
   return config
 }
 
-export = (ctx: PicGo) => {
+export = (ctx: picgo) => {
   const register = () => {
     ctx.helper.uploader.register('qingstor-uploader', {
       handle,
