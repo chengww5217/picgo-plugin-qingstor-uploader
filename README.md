@@ -10,7 +10,7 @@ Open the details window of [PicGo](https://github.com/Molunerfinn/PicGo), select
 
 ### Screenshots
 
-![](./screenshots/screenshot.png)
+![](./src/screenshots/screenshot.png)
 
 ### Configuration
 

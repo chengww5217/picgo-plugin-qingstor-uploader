@@ -10,7 +10,7 @@
 
 ### 截图
 
-![](./screenshots/screenshot.png)
+![](./src/screenshots/screenshot.png)
 
 ### 配置
 
