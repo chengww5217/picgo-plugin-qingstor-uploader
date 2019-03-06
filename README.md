@@ -6,7 +6,20 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 
 ### Installation
 
-Open the details window of [PicGo](https://github.com/Molunerfinn/PicGo), select **Plugin Settings**, and search **qingstor-uploader** for installation.
+- Online Installation
+
+    Open the details window of [PicGo](https://github.com/Molunerfinn/PicGo), select **Plugin Settings**, and search **qingstor-uploader** for installation.
+    Then restart the application.
+
+- Offline Installation
+
+    Clone this project and copy it to the folder below:
+    - Windows: `%APPDATA%\picgo\`
+    - Linux: `$XDG_CONFIG_HOME/picgo/` or `~/.config/picgo/`
+    - macOS: `~/Library/Application\ Support/picgo/`
+
+    Switch to the new directory and run `npm install ./picgo-plugin-qingstor-uploader`.
+    Then restart the application.
 
 ### Screenshots
 
