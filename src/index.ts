@@ -1,6 +1,7 @@
 import picgo from 'picgo'
 import { PluginConfig } from 'picgo/dist/utils/interfaces'
 import crypto from 'crypto'
+import { ERRORS } from 'qingstor_errors'
 
 // generate QingStor signature
 const generateSignature = (options: any, fileName: string): string => {
@@ -48,7 +49,7 @@ const postOptions = (options: any, fileName: string, signature: string, image: B
 const handle = async (ctx: picgo): Promise<picgo> => {
   const qingstorOptions = ctx.getConfig('picBed.qingstor-uploader')
   if (!qingstorOptions) {
-    throw new Error('Can\'t find the qingstor config')
+    throw new Error('找不到青云 QingStor 图床配置文件')
   }
   try {
     const imgList = ctx.output
@@ -68,7 +69,13 @@ const handle = async (ctx: picgo): Promise<picgo> => {
         const url = getHost(customUrl)
         imgList[i]['imgUrl'] = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${encodeURI(path)}/${imgList[i].fileName}`
       } else {
-        throw new Error('Upload failed')
+        let message
+        if (body.code) {
+          message = ERRORS[body.code] ? ERRORS[body.code] : body.code
+        } else {
+          message = 'Upload failed'
+        }
+        throw new Error(message)
       }
     }
     return ctx
@@ -76,12 +83,12 @@ const handle = async (ctx: picgo): Promise<picgo> => {
     if (err.error === 'Upload failed') {
       ctx.emit('notification', {
         title: '上传失败！',
-        body: `请检查你的配置项是否正确`
+        body: `请检查配置项或网络情况`
       })
     } else {
       ctx.emit('notification', {
         title: '上传失败！',
-        body: '请检查你的配置项是否正确'
+        body: err.error
       })
     }
     throw err
@@ -112,7 +119,7 @@ const config = (ctx: picgo): PluginConfig[] => {
       name: 'bucket',
       type: 'input',
       default: userConfig.bucket || '',
-      message: 'Bucket不能为空',
+      message: 'Bucket 不能为空',
       required: true
     },
     {
@@ -147,7 +154,7 @@ export = (ctx: picgo) => {
   const register = () => {
     ctx.helper.uploader.register('qingstor-uploader', {
       handle,
-      name: '青云 QingStor',
+      name: '青云 QingStor ',
       config: config
     })
   }
