@@ -100,36 +100,27 @@ const handle = async (ctx: picgo): Promise<picgo> => {
         image = Buffer.from(imgList[i].base64Image, 'base64')
       }
       const options = postOptions(qingstorOptions, imgList[i].fileName, signature, image)
-      let body = await ctx.Request.request(options)
+      const body = await ctx.Request.request(options)
       if (body.statusCode === 200 || body.statusCode === 201) {
         delete imgList[i].base64Image
         delete imgList[i].buffer
         const url = getHost(customUrl)
-        imgList[i]['imgUrl'] = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${encodeURI(path)}/${imgList[i].fileName}`
-      } else {
-        let message
-        if (body.code) {
-          message = ERRORS[body.code] ? ERRORS[body.code] : body.code
-        } else {
-          message = 'Upload failed'
-        }
-        throw new Error(message)
+        imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${encodeURI(path)}/${imgList[i].fileName}`
       }
     }
     return ctx
   } catch (err) {
-    if (err.error === 'Upload failed') {
-      ctx.emit('notification', {
-        title: '上传失败！',
-        body: `请检查配置项或网络情况`
-      })
+    const code = JSON.parse(err.error).code
+    let message
+    if (code) {
+      message = ERRORS[code] ? ERRORS[code] : code
     } else {
-      ctx.emit('notification', {
-        title: '上传失败！',
-        body: err.error
-      })
+      message = '请检查配置项或网络情况'
     }
-    throw err
+    ctx.emit('notification', {
+      title: '上传失败！',
+      body: message
+    })
   }
 }
 
