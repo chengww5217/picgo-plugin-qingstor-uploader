@@ -92,7 +92,10 @@ const handle = async (ctx: picgo): Promise<picgo> => {
   try {
     const imgList = ctx.output
     const customUrl = qingstorOptions.customUrl
-    const path = qingstorOptions.path
+    let path = qingstorOptions.path
+    if (path && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1)
+    }
     for (let i in imgList) {
       const signature = generateSignature(qingstorOptions, imgList[i].fileName)
       let image = imgList[i].buffer
@@ -163,7 +166,7 @@ const config = (ctx: picgo): PluginConfig[] => {
       name: 'path',
       type: 'input',
       alias: '存储路径',
-      message: 'blog',
+      message: 'blog/',
       default: userConfig.path || '',
       required: false
     },
