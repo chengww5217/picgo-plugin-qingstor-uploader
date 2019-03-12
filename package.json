@@ -18,7 +18,8 @@
   "keywords": [
     "picgo",
     "picgo-gui-plugin",
-    "picgo-plugin"
+    "picgo-plugin",
+    "青云对象存储图床"
   ],
   "author": "chengww",
   "license": "MIT",

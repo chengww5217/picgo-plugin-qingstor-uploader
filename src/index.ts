@@ -97,6 +97,7 @@ const handle = async (ctx: picgo): Promise<picgo> => {
       path = path.substring(0, path.length - 1)
     }
     for (let i in imgList) {
+      if (!imgList.hasOwnProperty(i)) continue
       const signature = generateSignature(qingstorOptions, imgList[i].fileName)
       let image = imgList[i].buffer
       if (!image && imgList[i].base64Image) {
@@ -132,7 +133,7 @@ const config = (ctx: picgo): PluginConfig[] => {
   if (!userConfig) {
     userConfig = {}
   }
-  const config = [
+  return [
     {
       name: 'accessKeyId',
       type: 'input',
@@ -179,7 +180,6 @@ const config = (ctx: picgo): PluginConfig[] => {
       required: false
     }
   ]
-  return config
 }
 
 export = (ctx: picgo) => {
