@@ -1,6 +1,6 @@
 {
   "name": "picgo-plugin-qingstor-uploader",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "青云对象存储图床; qingstor uploader;",
   "main": "dist/index.js",
   "publishConfig": {
