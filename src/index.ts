@@ -44,10 +44,20 @@ const ERRORS = {
 // generate QingStor signature
 const generateSignature = (options: any, fileName: string): string => {
   const date = new Date().toUTCString()
-  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}/${encodeURI(options.path)}/${encodeURI(fileName)}`
+  const path = generatePath(options)
+  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}/${encodeURI(path)}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
+}
+
+// Generate path
+const generatePath = (options: any): string => {
+  let path = options.path
+  if (path && path.endsWith('/')) {
+    path = path.substring(0, path.length - 1)
+  }
+  return path
 }
 
 const getHost = (customUrl: any): any => {
@@ -73,7 +83,7 @@ const postOptions = (options: any, fileName: string, signature: string, image: B
   const url = getHost(options.customUrl)
   return {
     method: 'PUT',
-    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(options.path)}/${encodeURI(fileName)}`,
+    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(generatePath(options))}/${encodeURI(fileName)}`,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
@@ -92,10 +102,7 @@ const handle = async (ctx: picgo): Promise<picgo> => {
   try {
     const imgList = ctx.output
     const customUrl = qingstorOptions.customUrl
-    let path = qingstorOptions.path
-    if (path && path.endsWith('/')) {
-      path = path.substring(0, path.length - 1)
-    }
+    const path = generatePath(qingstorOptions.path)
     for (let i in imgList) {
       if (!imgList.hasOwnProperty(i)) continue
       const signature = generateSignature(qingstorOptions, imgList[i].fileName)
