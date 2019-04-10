@@ -44,7 +44,7 @@ const ERRORS = {
 // generate QingStor signature
 const generateSignature = (options: any, fileName: string): string => {
   const date = new Date().toUTCString()
-  const path = generatePath(options)
+  const path = generatePath(options.path)
   const strToSign = `PUT\n\n\n${date}\n/${options.bucket}/${encodeURI(path)}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
@@ -52,8 +52,7 @@ const generateSignature = (options: any, fileName: string): string => {
 }
 
 // Generate path
-const generatePath = (options: any): string => {
-  let path = options.path
+const generatePath = (path: string): string => {
   if (path && path.endsWith('/')) {
     path = path.substring(0, path.length - 1)
   }
@@ -83,7 +82,7 @@ const postOptions = (options: any, fileName: string, signature: string, image: B
   const url = getHost(options.customUrl)
   return {
     method: 'PUT',
-    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(generatePath(options))}/${encodeURI(fileName)}`,
+    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(generatePath(options.path))}/${encodeURI(fileName)}`,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
