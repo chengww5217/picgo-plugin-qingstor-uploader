@@ -45,7 +45,7 @@ const ERRORS = {
 const generateSignature = (options: any, fileName: string): string => {
   const date = new Date().toUTCString()
   const path = generatePath(options.path)
-  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}/${encodeURI(path)}/${encodeURI(fileName)}`
+  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}${path ? '/' + encodeURI(path) : ''}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
@@ -80,9 +80,10 @@ const getHost = (customUrl: any): any => {
 
 const postOptions = (options: any, fileName: string, signature: string, image: Buffer): any => {
   const url = getHost(options.customUrl)
+  let path = generatePath(options.path)
   return {
     method: 'PUT',
-    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}/${encodeURI(generatePath(options.path))}/${encodeURI(fileName)}`,
+    url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path ? '/' + encodeURI(path) : ''}/${encodeURI(fileName)}`,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
@@ -115,7 +116,7 @@ const handle = async (ctx: picgo): Promise<picgo> => {
         delete imgList[i].base64Image
         delete imgList[i].buffer
         const url = getHost(customUrl)
-        imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}/${encodeURI(path)}/${imgList[i].fileName}`
+        imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}${path ? '/' + encodeURI(path) : ''}/${imgList[i].fileName}`
       }
     }
     return ctx
