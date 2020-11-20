@@ -25,7 +25,7 @@
 
 ### 截图
 
-![](./src/screenshots/screenshot.png)
+![](screenshots/screenshot.png)
 
 ### 配置
 

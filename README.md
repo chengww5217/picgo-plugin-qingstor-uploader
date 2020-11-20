@@ -27,7 +27,7 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 
 ### Screenshots
 
-![](./src/screenshots/screenshot.png)
+![](screenshots/screenshot.png)
 
 ### Configuration
 
