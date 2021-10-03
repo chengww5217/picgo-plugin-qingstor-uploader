@@ -15,5 +15,5 @@ export interface Host {
 }
 
 export interface QingStorError {
-  error: string
+  error: string | {code: string}
 }

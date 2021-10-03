@@ -88,12 +88,20 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 /**
  * Handle the request error and notify the user with the message.
  * @param ctx {picgo} The context to show the notification.
- * @param error {QingStorError} The request error.
+ * @param err {QingStorError} The request error.
  */
-export function handleError (ctx: picgo, error: QingStorError) {
+export function handleError (ctx: picgo, err: QingStorError) {
+  ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
   let message: string
   try {
-    const code = JSON.parse(error.error).code
+    const error = err.error
+    const type = typeof error
+    let code: string
+    if (type === 'string') {
+      code = JSON.parse(error as string).code
+    } else {
+      code = (error as {code: string}).code
+    }
     if (code) {
       message = ERRORS[code]
       if (!message) {
