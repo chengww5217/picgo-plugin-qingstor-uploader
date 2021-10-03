@@ -26,10 +26,10 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^10.10.1",
-    "picgo": "^1.2.0",
+    "picgo": "^1.4.0",
     "tslint": "^5.10.0",
     "tslint-config-standard": "^7.1.0",
-    "typescript": "^3.0.3",
+    "typescript": "^3.7.3",
     "eslint": "^5.0.1",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.13.0",
