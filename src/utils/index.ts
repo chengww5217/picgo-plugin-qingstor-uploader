@@ -91,14 +91,18 @@ export function uploadOptions (options: Options, fileName: string, signature: st
  * @param error {QingStorError} The request error.
  */
 export function handleError (ctx: picgo, error: QingStorError) {
-  const code = JSON.parse(error.error).code
-  let message
-  if (code) {
-    message = ERRORS[code]
-    if (!message) {
-      message = code
+  let message: string
+  try {
+    const code = JSON.parse(error.error).code
+    if (code) {
+      message = ERRORS[code]
+      if (!message) {
+        message = code
+      }
+    } else {
+      message = '请检查配置项或网络情况'
     }
-  } else {
+  } catch {
     message = '请检查配置项或网络情况'
   }
   ctx.emit('notification', {
