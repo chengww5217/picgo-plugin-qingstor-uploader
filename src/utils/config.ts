@@ -1,30 +1,28 @@
 import picgo from 'picgo'
-import { PluginConfig } from 'picgo/dist/utils/interfaces'
+import { IPluginConfig } from 'picgo/dist/src/types'
+import { Options } from '../typings'
 
-export const config = (ctx: picgo): PluginConfig[] => {
-  let userConfig = ctx.getConfig('picBed.qingstor-uploader')
-  if (!userConfig) {
-    userConfig = {}
-  }
+export const config = (ctx: picgo): IPluginConfig[] => {
+  let userConfig = ctx.getConfig<Options>('picBed.qingstor-uploader')
   return [
     {
       name: 'accessKeyId',
       type: 'input',
-      default: userConfig.accessKeyId || '',
+      default: userConfig?.accessKeyId || '',
       message: 'AccessKeyId 不能为空',
       required: true
     },
     {
       name: 'accessKeySecret',
       type: 'password',
-      default: userConfig.accessKeySecret || '',
+      default: userConfig?.accessKeySecret || '',
       message: 'AccessKeySecret 不能为空',
       required: true
     },
     {
       name: 'bucket',
       type: 'input',
-      default: userConfig.bucket || '',
+      default: userConfig?.bucket || '',
       message: 'Bucket 不能为空',
       required: true
     },
@@ -32,7 +30,7 @@ export const config = (ctx: picgo): PluginConfig[] => {
       name: 'zone',
       type: 'input',
       alias: '区域',
-      default: userConfig.area || '',
+      default: userConfig?.zone || '',
       message: '区域代码不能为空',
       required: true
     },
@@ -47,7 +45,7 @@ export const config = (ctx: picgo): PluginConfig[] => {
     {
       name: 'customUrl',
       type: 'input',
-      alias: '私有云网址',
+      alias: '自定义网址',
       message: 'https://qingstor.com',
       default: userConfig.customUrl || '',
       required: false
