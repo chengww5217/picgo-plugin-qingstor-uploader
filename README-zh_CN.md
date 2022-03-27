@@ -16,12 +16,11 @@
 
 - 离线安装
 
-    克隆该项目，复制项目到 以下目录：
-    - Windows: `%APPDATA%\picgo\`
-    - Linux: `$XDG_CONFIG_HOME/picgo/` or `~/.config/picgo/`
-    - macOS: `~/Library/Application\ Support/picgo/`
-
-    切换到新目录执行 `npm install ./picgo-plugin-qingstor-uploader`，然后重启应用即可。
+    1. 克隆该项目
+    2. 打开 [PicGo](https://github.com/Molunerfinn/PicGo) 详细窗口，选择**插件设置**，并点击如下按钮：
+       ![](screenshots/picgo-offline-install.png)
+    3. 选择你克隆仓库的文件夹
+    4. 重启应用即可
 
 ### 截图
 
