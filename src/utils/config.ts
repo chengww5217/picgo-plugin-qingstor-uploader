@@ -1,8 +1,7 @@
-import picgo from 'picgo'
-import { IPluginConfig } from 'picgo/dist/src/types'
+import { PicGo, IPluginConfig } from 'picgo'
 import { Options } from '../typings'
 
-export const config = (ctx: picgo): IPluginConfig[] => {
+export const config = (ctx: PicGo): IPluginConfig[] => {
   let userConfig = ctx.getConfig<Options>('picBed.qingstor-uploader')
   return [
     {

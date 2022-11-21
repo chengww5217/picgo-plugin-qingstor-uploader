@@ -1,10 +1,11 @@
-import picgo from 'picgo'
+import { PicGo } from 'picgo'
 import { generatePath, generateSignature, getHost, handleError, uploadOptions } from './utils'
 import { config } from './utils/config'
 import { CONFIG_NOT_FOUND_ERROR } from './utils/error'
 import { Options } from './typings'
+import {IFullResponse, IImgInfo, IOldReqOptions} from "picgo/dist/types";
 
-const handle = async (ctx: picgo): Promise<picgo> => {
+const handle = async (ctx: PicGo): Promise<PicGo> => {
   const qingstorOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
   if (!qingstorOptions) {
     handleError(ctx, CONFIG_NOT_FOUND_ERROR)
@@ -22,7 +23,7 @@ const handle = async (ctx: picgo): Promise<picgo> => {
         image = Buffer.from(imgList[i].base64Image, 'base64')
       }
       const options = uploadOptions(qingstorOptions, imgList[i].fileName, signature, image)
-      const body = await ctx.request(options)
+      const body = await ctx.request(options) as unknown as IFullResponse<IImgInfo, IOldReqOptions>
       if (body.statusCode === 200 || body.statusCode === 201) {
         delete imgList[i].base64Image
         delete imgList[i].buffer
@@ -37,7 +38,7 @@ const handle = async (ctx: picgo): Promise<picgo> => {
   }
 }
 
-export = (ctx: picgo) => {
+export = (ctx: PicGo) => {
   const register = () => {
     ctx.helper.uploader.register('qingstor-uploader', {
       handle,

@@ -1,8 +1,11 @@
-import { Host, Options, Protocol, QingStorError } from '../typings'
+import {Host, NewError, Options, Protocol, QingStorError} from '../typings'
 import crypto from 'crypto'
 import request from 'request-promise-native'
-import picgo from 'picgo'
+import { PicGo } from 'picgo'
 import { ERRORS } from './error'
+import { IOldReqOptions } from 'picgo/dist/types'
+
+const UserAgent = 'picgo_plugin_qingstor';
 
 /**
  * Generate signature of qingstor.
@@ -13,7 +16,7 @@ import { ERRORS } from './error'
 export function generateSignature (options: Options, fileName: string): string {
   const date = new Date().toUTCString()
   const path = generatePath(options.path)
-  const strToSign = `PUT\n\n\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
+  const strToSign = `PUT\n\n\n${date}${UserAgent}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
@@ -69,7 +72,7 @@ export function getHost (customUrl: string): Host {
  * @param image {Buffer} The image file's buffer.
  * @return {typeof request} The request info.
  */
-export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer): typeof request {
+export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer): IOldReqOptions {
   const url = getHost(options.customUrl)
   let path = generatePath(options.path)
   return {
@@ -78,7 +81,8 @@ export function uploadOptions (options: Options, fileName: string, signature: st
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
-      Date: new Date().toUTCString()
+      Date: new Date().toUTCString(),
+      'User-Agent': UserAgent
     },
     body: image,
     resolveWithFullResponse: true
@@ -87,21 +91,20 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 
 /**
  * Handle the request error and notify the user with the message.
- * @param ctx {picgo} The context to show the notification.
+ * @param ctx {PicGo} The context to show the notification.
  * @param err {QingStorError} The request error.
  */
-export function handleError (ctx: picgo, err: QingStorError) {
+export function handleError (ctx: PicGo, err: QingStorError) {
   ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
   let message: string
   try {
-    const error = err.error
+    let error = err.error
     const type = typeof error
     let code: string
     if (type === 'string') {
-      code = JSON.parse(error as string).code
-    } else {
-      code = (error as {code: string}).code
+      error = JSON.parse(error as string)
     }
+    code = (error as {code: string})?.code ?? (error as NewError)?.response?.body?.code
     if (code) {
       message = ERRORS[code]
       if (!message) {
