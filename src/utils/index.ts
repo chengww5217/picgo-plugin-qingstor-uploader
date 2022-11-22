@@ -1,4 +1,4 @@
-import {Host, NewError, Options, Protocol, QingStorError} from '../typings'
+import {Host, Options, Protocol, QingStorError} from '../typings'
 import crypto from 'crypto'
 import request from 'request-promise-native'
 import {IReqOptionsWithBodyResOnly, PicGo} from 'picgo'
@@ -16,7 +16,7 @@ const UserAgent = 'picgo_plugin_qingstor';
 export function generateSignature (options: Options, fileName: string, extname: string): string {
   const date = new Date().toUTCString()
   const path = generatePath(options.path)
-  const strToSign = `PUT\n\n\n${date}${UserAgent}${_getContentType(extname)}\n/${options.bucket}${path}/${encodeURI(fileName)}`
+  const strToSign = `PUT\n\n${_getContentType(extname)}\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
@@ -121,7 +121,8 @@ export function handleError (ctx: PicGo, err: QingStorError) {
     if (type === 'string') {
       error = JSON.parse(error as string)
     }
-    code = (error as {code: string})?.code ?? (error as NewError)?.response?.body?.code
+    code = (error as QingStorError)?.code ?? (error as QingStorError)?.response?.body?.code
+    if (!code) code = err?.code ?? err?.response?.body?.code
     if (code) {
       message = ERRORS[code]
       if (!message) {

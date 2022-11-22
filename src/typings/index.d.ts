@@ -14,14 +14,12 @@ export interface Host {
   host: string
 }
 
-export interface NewError {
-  response: {
-    body: {
-      code: string
+export interface QingStorError {
+  error?: string;
+  code?: string;
+  response?: {
+    body?: {
+      code?: string
     }
   }
-}
-
-export interface QingStorError {
-  error: string | {code: string} | NewError
 }
