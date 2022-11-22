@@ -1,8 +1,8 @@
 export interface Options {
-  accessKeyId: string,
-  accessKeySecret: string,
-  bucket: string,
-  zone: string,
+  accessKeyId?: string,
+  accessKeySecret?: string,
+  bucket?: string,
+  zone?: string,
   path?: string,
   customUrl?: string,
 }

@@ -3,7 +3,6 @@ import { generatePath, generateSignature, getHost, handleError, uploadOptions } 
 import { config } from './utils/config'
 import { CONFIG_NOT_FOUND_ERROR } from './utils/error'
 import { Options } from './typings'
-import {IFullResponse, IImgInfo, IOldReqOptions} from "picgo/dist/types";
 
 const handle = async (ctx: PicGo): Promise<PicGo> => {
   const qingstorOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
@@ -17,19 +16,17 @@ const handle = async (ctx: PicGo): Promise<PicGo> => {
     const path = generatePath(qingstorOptions.path)
     for (let i in imgList) {
       if (!imgList.hasOwnProperty(i)) continue
-      const signature = generateSignature(qingstorOptions, imgList[i].fileName)
+      const signature = generateSignature(qingstorOptions, imgList[i].fileName, imgList[i].extname)
       let image = imgList[i].buffer
       if (!image && imgList[i].base64Image) {
         image = Buffer.from(imgList[i].base64Image, 'base64')
       }
-      const options = uploadOptions(qingstorOptions, imgList[i].fileName, signature, image)
-      const body = await ctx.request(options) as unknown as IFullResponse<IImgInfo, IOldReqOptions>
-      if (body.statusCode === 200 || body.statusCode === 201) {
-        delete imgList[i].base64Image
-        delete imgList[i].buffer
-        const url = getHost(customUrl)
-        imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}${path}/${imgList[i].fileName}`
-      }
+      const options = uploadOptions(qingstorOptions, imgList[i].fileName, signature, image, imgList[i].extname)
+      await ctx.request(options)
+      delete imgList[i].base64Image
+      delete imgList[i].buffer
+      const url = getHost(customUrl)
+      imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}${path}/${imgList[i].fileName}`
     }
     return ctx
   } catch (err) {

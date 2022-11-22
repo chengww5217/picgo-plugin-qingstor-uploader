@@ -38,7 +38,7 @@ export const config = (ctx: PicGo): IPluginConfig[] => {
       type: 'input',
       alias: '存储路径',
       message: 'blog/',
-      default: userConfig.path || '',
+      default: userConfig?.path || '',
       required: false
     },
     {
@@ -46,7 +46,7 @@ export const config = (ctx: PicGo): IPluginConfig[] => {
       type: 'input',
       alias: '自定义网址',
       message: 'https://qingstor.com',
-      default: userConfig.customUrl || '',
+      default: userConfig?.customUrl || '',
       required: false
     }
   ]

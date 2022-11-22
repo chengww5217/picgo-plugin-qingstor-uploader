@@ -1,9 +1,8 @@
 import {Host, NewError, Options, Protocol, QingStorError} from '../typings'
 import crypto from 'crypto'
 import request from 'request-promise-native'
-import { PicGo } from 'picgo'
+import {IReqOptionsWithBodyResOnly, PicGo} from 'picgo'
 import { ERRORS } from './error'
-import { IOldReqOptions } from 'picgo/dist/types'
 
 const UserAgent = 'picgo_plugin_qingstor';
 
@@ -11,12 +10,13 @@ const UserAgent = 'picgo_plugin_qingstor';
  * Generate signature of qingstor.
  * @param options {Options} PicGo options, AKA infos user entered.
  * @param fileName {string} The upload image's name, AKA object key in oss.
+ * @param extname {string} extname for Content-Type in request headers.
  * @return {string} The generated signature.
  */
-export function generateSignature (options: Options, fileName: string): string {
+export function generateSignature (options: Options, fileName: string, extname: string): string {
   const date = new Date().toUTCString()
   const path = generatePath(options.path)
-  const strToSign = `PUT\n\n\n${date}${UserAgent}\n/${options.bucket}${path}/${encodeURI(fileName)}`
+  const strToSign = `PUT\n\n\n${date}${UserAgent}${_getContentType(extname)}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
@@ -64,15 +64,32 @@ export function getHost (customUrl: string): Host {
   return { protocol, host }
 }
 
+const imageMime = {
+  gif: 'image/gif',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  bmp: 'image/bmp',
+  ico: 'image/x-icon',
+  webp: 'image/webp',
+  svg: 'image/svg+xml'
+}
+
+function _getContentType(extname: string): string {
+  const ext = extname.replace('.', '');
+  return imageMime[ext] || 'application/octet-stream';
+}
+
 /**
  * Get the upload options.
  * @param options {Options} User entered infos.
  * @param fileName {string} The file's name.
  * @param signature {string} The signature for upload.
  * @param image {Buffer} The image file's buffer.
+ * @param extname {string} ext name.
  * @return {typeof request} The request info.
  */
-export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer): IOldReqOptions {
+export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer, extname: string): IReqOptionsWithBodyResOnly {
   const url = getHost(options.customUrl)
   let path = generatePath(options.path)
   return {
@@ -82,10 +99,10 @@ export function uploadOptions (options: Options, fileName: string, signature: st
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
       Date: new Date().toUTCString(),
-      'User-Agent': UserAgent
+      'User-Agent': UserAgent,
+      'Content-Type': _getContentType(extname),
     },
-    body: image,
-    resolveWithFullResponse: true
+    data: image
   }
 }
 
