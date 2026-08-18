@@ -26,7 +26,7 @@ const handle = async (ctx: PicGo): Promise<PicGo> => {
       delete imgList[i].base64Image
       delete imgList[i].buffer
       const url = getHost(customUrl)
-      imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.zone}.${url.host}/${qingstorOptions.bucket}${path}/${imgList[i].fileName}`
+      imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${imgList[i].fileName}`
     }
     return ctx
   } catch (err) {
