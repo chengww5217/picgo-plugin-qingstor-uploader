@@ -86,9 +86,9 @@ const UI: Record<string, LocaleTexts> = {
     'en': 'Images are stored under this path in the bucket. Leave empty for the root.'
   },
   QINGSTOR_TIPS_CUSTOM_URL: {
-    'zh-CN': '仅私有云或自定义域名时填写，例如 https://qsstor.example.com',
-    'zh-TW': '僅私有雲或自訂網域時填寫，例如 https://qsstor.example.com',
-    'en': 'Only for private cloud or a custom domain, e.g. https://qsstor.example.com'
+    'zh-CN': '仅私有云或自定义域名时填写，例如 https://qingstor.example.com',
+    'zh-TW': '僅私有雲或自訂網域時填寫，例如 https://qingstor.example.com',
+    'en': 'Only for private cloud or a custom domain, e.g. https://qingstor.example.com'
   },
   QINGSTOR_MENU_CHECK_CONFIG: {
     'zh-CN': '检查配置与连接',

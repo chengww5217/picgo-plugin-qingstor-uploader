@@ -36,9 +36,9 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 |bucket|input|Bucket name. Create it first; only lowercase letters, digits and hyphens (-) are allowed|true|
 |zone|input|Zone id, e.g. `pek3b`. Common QingCloud zones: `pek3a`、`pek3b`、`sh1a`、`gd2`. For private cloud or other regions, type the actual value|true|
 |path|input|Storage path inside the bucket, leave empty for the root directory|false|
-|customUrl|input|Only for private cloud or a custom domain, e.g. `https://qsstor.example.com`|false|
+|customUrl|input|Only for private cloud or a custom domain, e.g. `https://qingstor.example.com`|false|
 
 In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en). You can verify the config and the connection from the plugin menu ("Check config & connection").
 
-The default endpoint is the official QingCloud one: `https://<bucket>.<zone>.qsstor.com`. Only fill in Custom URL when you use a private cloud or a custom domain.
+The default endpoint is the official QingCloud one: `https://<bucket>.<zone>.qingstor.com`. Only fill in Custom URL when you use a private cloud or a custom domain.
 

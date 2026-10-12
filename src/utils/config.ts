@@ -55,8 +55,8 @@ export const config = (ctx: IPicGo): IPluginConfig[] => {
       name: 'customUrl',
       type: 'input',
       alias: translate(ctx, 'QINGSTOR_ALIAS_CUSTOM_URL', '自定义网址'),
-      message: 'https://qsstor.com',
-      tips: translate(ctx, 'QINGSTOR_TIPS_CUSTOM_URL', '仅私有云或自定义域名时填写，例如 https://qsstor.example.com'),
+      message: 'https://qingstor.com',
+      tips: translate(ctx, 'QINGSTOR_TIPS_CUSTOM_URL', '仅私有云或自定义域名时填写，例如 https://qingstor.example.com'),
       default: userConfig.customUrl || '',
       required: false
     }

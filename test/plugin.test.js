@@ -34,8 +34,7 @@ const contentTypes = {
   '.bmp': 'image/bmp',
   '.ico': 'image/x-icon',
   '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
-  '.unknown': 'application/octet-stream'
+  '.svg': 'image/svg+xml'
 }
 
 /**
@@ -44,7 +43,7 @@ const contentTypes = {
 function signAsQingStor (date, { options: overrides = {}, fileName = 'a.png', extname = '.png' } = {}) {
   const opts = { ...options, ...overrides }
   const path = generatePath(opts.path)
-  const strToSign = `PUT\n\n${contentTypes[extname]}\n${date}\n/${opts.bucket}${path}/${encodeURI(fileName)}`
+  const strToSign = `PUT\n\n${contentTypes[extname] ?? ''}\n${date}\n/${opts.bucket}${path}/${encodeURI(fileName)}`
   const signature = crypto.createHmac('sha256', opts.accessKeySecret).update(strToSign).digest('base64')
   return `QS ${opts.accessKeyId}:${signature}`
 }
@@ -116,7 +115,7 @@ describe('generatePath', () => {
 
 describe('getHost', () => {
   it('默认使用 https 与青云域名', () => {
-    assert.deepEqual(getHost(''), { protocol: 'https', host: 'qsstor.com' })
+    assert.deepEqual(getHost(''), { protocol: 'https', host: 'qingstor.com' })
   })
 
   it('支持自定义域名', () => {
@@ -134,11 +133,11 @@ describe('getHost', () => {
 
 describe('buildObjectUrl', () => {
   it('按 bucket/zone/路径拼出公开地址', () => {
-    assert.equal(buildObjectUrl(options, 'a.png'), 'https://bkt.pek3b.qsstor.com/a.png')
+    assert.equal(buildObjectUrl(options, 'a.png'), 'https://bkt.pek3b.qingstor.com/a.png')
   })
 
   it('包含编码后的文件名与自定义路径', () => {
-    assert.equal(buildObjectUrl({ ...options, path: 'blog/' }, 'a b.png'), 'https://bkt.pek3b.qsstor.com/blog/a%20b.png')
+    assert.equal(buildObjectUrl({ ...options, path: 'blog/' }, 'a b.png'), 'https://bkt.pek3b.qingstor.com/blog/a%20b.png')
   })
 
   it('跟随自定义域名', () => {
@@ -204,12 +203,12 @@ describe('uploadOptions', () => {
   it('按区域拼出上传地址', () => {
     const request = build()
     assert.equal(request.method, 'PUT')
-    assert.equal(request.url, 'https://pek3b.qsstor.com/bkt/a.png')
+    assert.equal(request.url, 'https://pek3b.qingstor.com/bkt/a.png')
   })
 
   it('地址包含 bucket、路径与编码后的文件名', () => {
     const request = build({ bucket: 'bucket-1', path: 'blog/' }, 'a b.png', '.png')
-    assert.equal(request.url, 'https://pek3b.qsstor.com/bucket-1/blog/a%20b.png')
+    assert.equal(request.url, 'https://pek3b.qingstor.com/bucket-1/blog/a%20b.png')
   })
 
   it('跟随自定义域名与协议', () => {
@@ -242,6 +241,12 @@ describe('uploadOptions', () => {
     })
   }
 
+  it('非图片文件显式移除 Content-Type（不参与签名），避免 axios 注入默认值', () => {
+    const request = build({}, 'status', '')
+    assert.equal(request.headers['Content-Type'], null)
+    assert.equal(request.headers.Authorization, signAsQingStor(request.headers.Date, { fileName: 'status', extname: '' }))
+  })
+
   it('把图片内容放进 data', () => {
     assert.equal(build().data, image)
   })
@@ -255,7 +260,7 @@ describe('normalizeOptions', () => {
       bucket: ' bkt ',
       zone: ' pek3b ',
       path: ' blog/ ',
-      customUrl: ' https://qsstor.example.com '
+      customUrl: ' https://qingstor.example.com '
     })
     assert.deepEqual(out, {
       accessKeyId: 'AK',
@@ -263,7 +268,7 @@ describe('normalizeOptions', () => {
       bucket: 'bkt',
       zone: 'pek3b',
       path: 'blog/',
-      customUrl: 'https://qsstor.example.com'
+      customUrl: 'https://qingstor.example.com'
     })
   })
 
@@ -386,7 +391,7 @@ describe('plugin', () => {
     await uploader.handle(ctx)
 
     assert.equal(requests.length, 1)
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/a.png')
     assert.equal(output[0].buffer, undefined)
     assert.equal(output[0].base64Image, undefined)
   })
@@ -396,7 +401,7 @@ describe('plugin', () => {
     const { ctx, uploader } = createCtx(options, output)
     await uploader.handle(ctx)
 
-    assert.equal(output[0].url, 'https://bkt.pek3b.qsstor.com/a.png')
+    assert.equal(output[0].url, 'https://bkt.pek3b.qingstor.com/a.png')
   })
 
   it('图片既无 buffer 也无 base64 时给出提示', async () => {
@@ -413,8 +418,8 @@ describe('plugin', () => {
     const { ctx, requests, uploader } = createCtx({ ...options, zone: 'my-zone' }, output)
     await uploader.handle(ctx)
 
-    assert.equal(requests[0].url, 'https://my-zone.qsstor.com/bkt/a.png')
-    assert.equal(output[0].imgUrl, 'https://bkt.my-zone.qsstor.com/a.png')
+    assert.equal(requests[0].url, 'https://my-zone.qingstor.com/bkt/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.my-zone.qingstor.com/a.png')
   })
 
   it('地址与上传地址使用同一套编码与路径', async () => {
@@ -422,8 +427,8 @@ describe('plugin', () => {
     const { ctx, requests, uploader } = createCtx({ ...options, path: 'blog/' }, output)
     await uploader.handle(ctx)
 
-    assert.equal(requests[0].url, 'https://pek3b.qsstor.com/bkt/blog/a%20b.png')
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/blog/a%20b.png')
+    assert.equal(requests[0].url, 'https://pek3b.qingstor.com/bkt/blog/a%20b.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/blog/a%20b.png')
   })
 
   it('配置里多余的首尾空格会被裁剪，避免 signature_not_matched', async () => {
@@ -431,7 +436,7 @@ describe('plugin', () => {
     const { ctx, requests, uploader } = createCtx({ ...options, bucket: ' bkt ', path: ' blog ' }, output)
     await uploader.handle(ctx)
 
-    assert.equal(requests[0].url, 'https://pek3b.qsstor.com/bkt/blog/status')
+    assert.equal(requests[0].url, 'https://pek3b.qingstor.com/bkt/blog/status')
   })
 
   it('没有配置时提示找不到配置文件', async () => {
@@ -502,7 +507,7 @@ describe('plugin', () => {
     }
     await uploader.handle(ctx)
 
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/a.png')
     assert.equal(output[1].imgUrl, undefined)
     assert.equal(notifications[0].body, '访问的 bucket 不存在')
   })

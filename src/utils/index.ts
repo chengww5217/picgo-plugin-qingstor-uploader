@@ -32,7 +32,7 @@ export function normalizeOptions (options?: Options): Options {
  * Check the user's configuration before uploading.
  * Required fields are also validated by PicGo's config form, but a config file
  * edited by hand (or a half-filled one) would otherwise build a request for
- * an invalid url such as https://.qsstor.com/... and fail with a confusing error.
+ * an invalid url such as https://.qingstor.com/... and fail with a confusing error.
  * @param options {Options} PicGo options, AKA infos user entered.
  * @return {string} The error code, or '' when the configuration is valid.
  */
@@ -54,7 +54,8 @@ export function validateOptions (options: Options): string {
 export function generateSignature (options: Options, fileName: string, extname: string): SignatureInfo {
   const date = new Date().toUTCString()
   const path = generatePath(options.path ?? '')
-  const strToSign = `PUT\n\n${_getContentType(extname)}\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
+  const contentType = _getContentType(extname) ?? ''
+  const strToSign = `PUT\n\n${contentType}\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret ?? '').update(strToSign).digest('base64')
   return { signature: `QS ${options.accessKeyId}:${signature}`, date }
@@ -72,7 +73,7 @@ export function generatePath (path: string): string {
   return '/' + encodeURI(trimmedPath)
 }
 
-const QINGSTOR_HOST = 'qsstor.com'
+const QINGSTOR_HOST = 'qingstor.com'
 const HTTP_PROTOCOL = 'http'
 const HTTP_PREFIX = HTTP_PROTOCOL + '://'
 const HTTPS_PROTOCOL = 'https'
@@ -122,9 +123,9 @@ const imageMime: Record<string, string> = {
   svg: 'image/svg+xml'
 }
 
-function _getContentType(extname: string): string {
+function _getContentType (extname: string): string | undefined {
   const ext = extname.replace('.', '');
-  return imageMime[ext] || 'application/octet-stream';
+  return imageMime[ext];
 }
 
 /**
@@ -140,16 +141,21 @@ function _getContentType(extname: string): string {
 export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer, extname: string, date: string): IReqOptionsWithBodyResOnly {
   const url = getHost(options.customUrl ?? '')
   const path = generatePath(options.path ?? '')
+  const headers: Record<string, string | null> = {
+    Authorization: signature,
+    Date: date,
+    'User-Agent': UserAgent,
+  }
+  // Only images get an explicit Content-Type and take part in the signature.
+  // For any other file we set it to `null` so axios really omits the header
+  // (otherwise it injects `application/x-www-form-urlencoded`, which would not
+  // match the empty Content-Type used to sign the request).
+  headers['Content-Type'] = _getContentType(extname) ?? null
   return {
     method: 'PUT',
     url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path}/${encodeURI(fileName)}`,
     timeout: UPLOAD_TIMEOUT,
-    headers: {
-      Authorization: signature,
-      Date: date,
-      'User-Agent': UserAgent,
-      'Content-Type': _getContentType(extname),
-    },
+    headers,
     data: image
   }
 }

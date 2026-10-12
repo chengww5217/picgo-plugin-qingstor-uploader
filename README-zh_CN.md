@@ -35,10 +35,10 @@
 |bucket|input|Bucket 名称，需要提前创建，名称只支持小写字母、数字和中划线（-）|true|
 |zone|input|区域代码，例如 `pek3b`。青云公有云常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请直接填写实际值|true|
 |path|input|上传时默认存储路径，留空表示根目录|false|
-|customUrl|input|仅私有云或自定义域名时填写，示例：`https://qsstor.example.com`|false|
+|customUrl|input|仅私有云或自定义域名时填写，示例：`https://qingstor.example.com`|false|
 
 在 PicGo 客户端里，每个配置项都带有本地化的标题与提示（简体中文 / 繁體中文 / English）。可以在插件菜单里点击「检查配置与连接」来校验配置并测试连通性。
 
-默认使用青云官方 Endpoint：`https://<bucket>.<zone>.qsstor.com`。仅当你使用私有云或自定义域名时才需要填写「自定义网址」。
+默认使用青云官方 Endpoint：`https://<bucket>.<zone>.qingstor.com`。仅当你使用私有云或自定义域名时才需要填写「自定义网址」。
 
 
