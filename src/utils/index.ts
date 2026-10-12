@@ -1,9 +1,31 @@
 import {Host, Options, Protocol, QingStorError, SignatureInfo} from '../typings'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
 import {IReqOptionsWithBodyResOnly, IPicGo} from 'picgo'
 import { translate, translateError } from '../i18n'
 
-const UserAgent = 'picgo_plugin_qingstor';
+/** Name of this plugin, used as the base of the User-Agent. */
+const PLUGIN_NAME = 'picgo_plugin_qingstor';
+
+/**
+ * Read the plugin's own version from its package.json (two levels above the
+ * compiled `dist/utils` folder). Falls back to an empty string when unreadable.
+ * @return {string} The version, or '' if it can not be determined.
+ */
+function readPluginVersion (): string {
+  try {
+    const pkgPath = path.join(__dirname, '..', '..', 'package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+    return typeof pkg.version === 'string' ? pkg.version : ''
+  } catch {
+    return ''
+  }
+}
+
+const pluginVersion = readPluginVersion()
+/** Sent on every request, e.g. `picgo_plugin_qingstor/1.2.5`. */
+const UserAgent = pluginVersion ? `${PLUGIN_NAME}/${pluginVersion}` : PLUGIN_NAME;
 /** Timeout of the upload request, in milliseconds. */
 const UPLOAD_TIMEOUT = 30000;
 /** Timeout of the connectivity check, in milliseconds. */

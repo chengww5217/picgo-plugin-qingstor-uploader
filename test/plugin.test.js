@@ -230,8 +230,13 @@ describe('uploadOptions', () => {
   it('带上必要的请求头', () => {
     const request = build()
     assert.equal(request.headers.Authorization.startsWith('QS AK:'), true)
-    assert.equal(request.headers['User-Agent'], 'picgo_plugin_qingstor')
+    assert.match(request.headers['User-Agent'], /^picgo_plugin_qingstor\/\d+\.\d+\.\d+/)
     assert.equal(request.headers['Content-Type'], 'image/png')
+  })
+
+  it('User-Agent 带上插件版本号', () => {
+    const { version } = require('../package.json')
+    assert.equal(build().headers['User-Agent'], `picgo_plugin_qingstor/${version}`)
   })
 
   for (const [extname, contentType] of Object.entries(contentTypes)) {
