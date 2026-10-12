@@ -11,7 +11,7 @@ const {
   handleError,
   buildObjectUrl,
   checkConnectivity,
-  normalizeOptions
+  normalizeOptions,
 } = require('../dist/utils/index.js')
 const { config } = require('../dist/utils/config.js')
 const plugin = require('../dist/index.js')
@@ -22,7 +22,7 @@ const options = {
   bucket: 'bkt',
   zone: 'pek3b',
   path: '',
-  customUrl: ''
+  customUrl: '',
 }
 const image = Buffer.from('image data')
 
@@ -34,13 +34,13 @@ const contentTypes = {
   '.bmp': 'image/bmp',
   '.ico': 'image/x-icon',
   '.webp': 'image/webp',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
 }
 
 /**
  * Recompute the signature the way QingStor does, using a given Date header.
  */
-function signAsQingStor (date, { options: overrides = {}, fileName = 'a.png', extname = '.png' } = {}) {
+function signAsQingStor(date, { options: overrides = {}, fileName = 'a.png', extname = '.png' } = {}) {
   const opts = { ...options, ...overrides }
   const path = generatePath(opts.path)
   const strToSign = `PUT\n\n${contentTypes[extname] ?? ''}\n${date}\n/${opts.bucket}${path}/${encodeURI(fileName)}`
@@ -53,11 +53,11 @@ function signAsQingStor (date, { options: overrides = {}, fileName = 'a.png', ex
  * one, so two separate calls can never produce the same timestamp.
  * Used to catch the signature/Date divergence regression.
  */
-function withAdvancingClock (fn) {
+function withAdvancingClock(fn) {
   const RealDate = Date
   let ticks = 0
   class FakeDate extends RealDate {
-    constructor (...args) {
+    constructor(...args) {
       super(...(args.length ? args : [RealDate.now() + (ticks += 1000)]))
     }
   }
@@ -72,7 +72,7 @@ function withAdvancingClock (fn) {
 /**
  * Build a fake PicGo context, and register the plugin on it.
  */
-function createCtx (config, output = []) {
+function createCtx(config, output = []) {
   const requests = []
   const notifications = []
   let uploader
@@ -80,10 +80,20 @@ function createCtx (config, output = []) {
   const ctx = {
     getConfig: () => config,
     output,
-    request: async (requestOptions) => { requests.push(requestOptions) },
+    request: async requestOptions => {
+      requests.push(requestOptions)
+    },
     log: { error: () => {} },
-    helper: { uploader: { register: (id, handler) => { uploader = handler } } },
-    emit: (name, payload) => { notifications.push(payload) }
+    helper: {
+      uploader: {
+        register: (id, handler) => {
+          uploader = handler
+        },
+      },
+    },
+    emit: (name, payload) => {
+      notifications.push(payload)
+    },
   }
   const instance = plugin(ctx)
   instance.register()
@@ -92,8 +102,12 @@ function createCtx (config, output = []) {
     ctx,
     requests,
     notifications,
-    get uploader () { return uploader },
-    get guiMenu () { return guiMenu }
+    get uploader() {
+      return uploader
+    },
+    get guiMenu() {
+      return guiMenu
+    },
   }
 }
 
@@ -104,7 +118,7 @@ describe('generatePath', () => {
     ['blog', '/blog'],
     ['blog/', '/blog'],
     ['a b/', '/a%20b'],
-    ['博客/', '/%E5%8D%9A%E5%AE%A2']
+    ['博客/', '/%E5%8D%9A%E5%AE%A2'],
   ]
   for (const [input, expected] of cases) {
     it(`将 ${JSON.stringify(input)} 转为 ${JSON.stringify(expected)}`, () => {
@@ -137,11 +151,17 @@ describe('buildObjectUrl', () => {
   })
 
   it('包含编码后的文件名与自定义路径', () => {
-    assert.equal(buildObjectUrl({ ...options, path: 'blog/' }, 'a b.png'), 'https://bkt.pek3b.qingstor.com/blog/a%20b.png')
+    assert.equal(
+      buildObjectUrl({ ...options, path: 'blog/' }, 'a b.png'),
+      'https://bkt.pek3b.qingstor.com/blog/a%20b.png',
+    )
   })
 
   it('跟随自定义域名', () => {
-    assert.equal(buildObjectUrl({ ...options, customUrl: 'https://qingstor.example.com' }, 'a.png'), 'https://bkt.pek3b.qingstor.example.com/a.png')
+    assert.equal(
+      buildObjectUrl({ ...options, customUrl: 'https://qingstor.example.com' }, 'a.png'),
+      'https://bkt.pek3b.qingstor.example.com/a.png',
+    )
   })
 })
 
@@ -152,18 +172,31 @@ describe('checkConnectivity', () => {
   })
 
   it('只有网络层失败（无响应）才算不可达', async () => {
-    const ctx = { request: async () => { throw { code: 'ENOTFOUND' } } }
+    const ctx = {
+      request: async () => {
+        throw { code: 'ENOTFOUND' }
+      },
+    }
     assert.equal(await checkConnectivity(ctx, options), false)
   })
 
   it('4xx 之类的响应异常仍然算可达', async () => {
-    const ctx = { request: async () => { throw { response: { status: 403 } } } }
+    const ctx = {
+      request: async () => {
+        throw { response: { status: 403 } }
+      },
+    }
     assert.equal(await checkConnectivity(ctx, options), true)
   })
 
   it('使用区域与自定义网址拼出探测地址', async () => {
     const calls = []
-    const ctx = { request: async (requestOptions) => { calls.push(requestOptions); return {} } }
+    const ctx = {
+      request: async requestOptions => {
+        calls.push(requestOptions)
+        return {}
+      },
+    }
     await checkConnectivity(ctx, { ...options, customUrl: 'qingstor.example.com' })
     assert.equal(calls[0].method, 'HEAD')
     assert.equal(calls[0].url, 'https://pek3b.qingstor.example.com/bkt')
@@ -249,7 +282,10 @@ describe('uploadOptions', () => {
   it('非图片文件显式移除 Content-Type（不参与签名），避免 axios 注入默认值', () => {
     const request = build({}, 'status', '')
     assert.equal(request.headers['Content-Type'], null)
-    assert.equal(request.headers.Authorization, signAsQingStor(request.headers.Date, { fileName: 'status', extname: '' }))
+    assert.equal(
+      request.headers.Authorization,
+      signAsQingStor(request.headers.Date, { fileName: 'status', extname: '' }),
+    )
   })
 
   it('把图片内容放进 data', () => {
@@ -265,7 +301,7 @@ describe('normalizeOptions', () => {
       bucket: ' bkt ',
       zone: ' pek3b ',
       path: ' blog/ ',
-      customUrl: ' https://qingstor.example.com '
+      customUrl: ' https://qingstor.example.com ',
     })
     assert.deepEqual(out, {
       accessKeyId: 'AK',
@@ -273,7 +309,7 @@ describe('normalizeOptions', () => {
       bucket: 'bkt',
       zone: 'pek3b',
       path: 'blog/',
-      customUrl: 'https://qingstor.example.com'
+      customUrl: 'https://qingstor.example.com',
     })
   })
 
@@ -302,8 +338,8 @@ describe('validateOptions', () => {
 })
 
 describe('config', () => {
-  const build = (userConfig) => config({ getConfig: () => userConfig })
-  const field = (fields, name) => fields.find((item) => item.name === name)
+  const build = userConfig => config({ getConfig: () => userConfig })
+  const field = (fields, name) => fields.find(item => item.name === name)
 
   it('区域是自由输入，默认回填已存值', () => {
     const zone = field(build({ zone: 'my-zone' }), 'zone')
@@ -327,10 +363,7 @@ describe('config', () => {
 describe('handleError', () => {
   const notify = (err, i18n) => {
     const notifications = []
-    handleError(
-      { i18n, log: { error: () => {} }, emit: (name, payload) => notifications.push(payload) },
-      err
-    )
+    handleError({ i18n, log: { error: () => {} }, emit: (name, payload) => notifications.push(payload) }, err)
     return notifications[0]
   }
 
@@ -370,14 +403,16 @@ describe('handleError', () => {
   })
 
   it('使用 PicGo 内置的 i18n 文案', () => {
-    const i18n = { translate: (key) => ({ UPLOAD_FAILED: 'Upload failed', CHECK_SETTINGS_AND_NETWORK: 'Check network' }[key] ?? key) }
+    const i18n = {
+      translate: key => ({ UPLOAD_FAILED: 'Upload failed', CHECK_SETTINGS_AND_NETWORK: 'Check network' })[key] ?? key,
+    }
     const { title, body } = notify({}, i18n)
     assert.equal(title, 'Upload failed')
     assert.equal(body, 'Check network')
   })
 
   it('i18n 缺少该 key 时回退到中文文案，不把 key 显示给用户', () => {
-    const { title } = notify({}, { translate: (key) => key })
+    const { title } = notify({}, { translate: key => key })
     assert.equal(title, '上传失败！')
   })
 })
@@ -462,7 +497,9 @@ describe('plugin', () => {
   it('上传失败时提示错误原因', async () => {
     const output = [{ fileName: 'a.png', extname: '.png', buffer: image }]
     const { ctx, notifications, uploader } = createCtx(options, output)
-    ctx.request = async () => { throw { response: { body: { code: 'permission_denied' } } } }
+    ctx.request = async () => {
+      throw { response: { body: { code: 'permission_denied' } } }
+    }
     await uploader.handle(ctx)
 
     assert.equal(notifications[0].body, '没有权限执行此次请求')
@@ -471,41 +508,47 @@ describe('plugin', () => {
   it('多张图片各自使用一致的 Date 签名', async () => {
     const output = [
       { fileName: 'a.png', extname: '.png', buffer: image },
-      { fileName: 'b.png', extname: '.png', buffer: image }
+      { fileName: 'b.png', extname: '.png', buffer: image },
     ]
     const { ctx, requests, uploader } = createCtx(options, output)
     await uploader.handle(ctx)
 
     assert.equal(requests.length, 2)
     for (const [index, request] of requests.entries()) {
-      assert.equal(request.headers.Authorization, signAsQingStor(request.headers.Date, { fileName: output[index].fileName }))
+      assert.equal(
+        request.headers.Authorization,
+        signAsQingStor(request.headers.Date, { fileName: output[index].fileName }),
+      )
     }
   })
 
   it('并发上传多张图片，不互相等待', async () => {
     const output = [
       { fileName: 'a.png', extname: '.png', buffer: image },
-      { fileName: 'b.png', extname: '.png', buffer: image }
+      { fileName: 'b.png', extname: '.png', buffer: image },
     ]
     const { ctx, uploader } = createCtx(options, output)
     const pending = []
-    ctx.request = () => new Promise((resolve) => { pending.push(resolve) })
+    ctx.request = () =>
+      new Promise(resolve => {
+        pending.push(resolve)
+      })
 
     const handled = uploader.handle(ctx)
-    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
     assert.equal(pending.length, 2, '两个请求应当同时发出')
 
-    pending.forEach((resolve) => resolve())
+    pending.forEach(resolve => resolve())
     await handled
   })
 
   it('部分图片失败时，成功的图片仍然写入地址，失败的给出提示', async () => {
     const output = [
       { fileName: 'a.png', extname: '.png', buffer: image },
-      { fileName: 'b.png', extname: '.png', buffer: image }
+      { fileName: 'b.png', extname: '.png', buffer: image },
     ]
     const { ctx, notifications, uploader } = createCtx(options, output)
-    ctx.request = async (requestOptions) => {
+    ctx.request = async requestOptions => {
       if (requestOptions.url.includes('b.png')) {
         throw { response: { body: { code: 'bucket_not_exists' } } }
       }
@@ -525,10 +568,10 @@ describe('guiMenu', () => {
     if (request) ctx.request = request
     const item = guiMenu(ctx)[0]
     await item.handle(ctx, {
-      showMessageBox: async (options) => {
+      showMessageBox: async options => {
         boxes.push(options)
         return { result: 0, checkboxChecked: false }
-      }
+      },
     })
     return boxes
   }
@@ -557,7 +600,9 @@ describe('guiMenu', () => {
   })
 
   it('配置完整但网络不可达时给出警告', async () => {
-    const boxes = await run(options, async () => { throw { code: 'ENOTFOUND' } })
+    const boxes = await run(options, async () => {
+      throw { code: 'ENOTFOUND' }
+    })
     assert.equal(boxes[0].type, 'warning')
     assert.equal(boxes[0].message, '配置完整，但无法连接青云服务，请检查区域(zone)、自定义网址和网络')
   })
