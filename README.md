@@ -17,13 +17,13 @@ A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](h
 
 1. Open PicGo, go to **Plugin Settings** and search **qingstor**.
 
-   ![](screenshots/plugins.png)
+   ![](https://raw.githubusercontent.com/chengww5217/picgo-plugin-qingstor-uploader/master/screenshots/plugins.png)
 
 2. Install it and restart PicGo.
 
 ### Screenshots
 
-![Configuration](screenshots/config.png)
+![Configuration](https://raw.githubusercontent.com/chengww5217/picgo-plugin-qingstor-uploader/master/screenshots/config.png)
 
 ### Configuration
 

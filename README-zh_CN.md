@@ -17,13 +17,13 @@
 
 1. 打开 PicGo，进入 **插件设置**，搜索 **qingstor**。
 
-   ![](screenshots/plugins.png)
+   ![](https://raw.githubusercontent.com/chengww5217/picgo-plugin-qingstor-uploader/master/screenshots/plugins.png)
 
 2. 安装并重启 PicGo。
 
 ### 截图
 
-![配置](screenshots/config.png)
+![配置](https://raw.githubusercontent.com/chengww5217/picgo-plugin-qingstor-uploader/master/screenshots/config.png)
 
 ### 配置
 
