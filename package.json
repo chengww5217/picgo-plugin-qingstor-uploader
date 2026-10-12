@@ -18,7 +18,6 @@
   "scripts": {
     "test": "npm run build && node --test",
     "build": "tsc -p .",
-    "dev": "tsc -w -p .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.js\"",
     "prepublishOnly": "npm test"
