@@ -48,6 +48,7 @@ export function normalizeOptions(options?: Options): Options {
     path: raw.path?.trim(),
     customUrl: raw.customUrl?.trim(),
     deleteRemote: raw.deleteRemote,
+    endpoint: raw.endpoint?.trim(),
   }
 }
 
@@ -127,13 +128,23 @@ export function getHost(customUrl: string): Host {
 }
 
 /**
+ * Resolve the endpoint url to use: the `endpoint` value, or the legacy
+ * `customUrl` value from a config created before `endpoint` existed.
+ * @param options {Options} User entered infos.
+ * @return {string} An url (with or without protocol), or '' for the default.
+ */
+export function resolveHost(options: Options): string {
+  return options.endpoint || options.customUrl || ''
+}
+
+/**
  * Build the public url of an uploaded image (bucket as a subdomain).
  * @param options {Options} User entered infos.
  * @param fileName {string} The uploaded image's name.
  * @return {string} The public url.
  */
 export function buildObjectUrl(options: Options, fileName: string): string {
-  const url = getHost(options.customUrl ?? '')
+  const url = getHost(resolveHost(options))
   const path = generatePath(options.path ?? '')
   return `${url.protocol}://${options.bucket}.${options.zone}.${url.host}${path}/${encodeURI(fileName)}`
 }
@@ -172,7 +183,7 @@ export function uploadOptions(
   extname: string,
   date: string,
 ): IReqOptionsWithBodyResOnly {
-  const url = getHost(options.customUrl ?? '')
+  const url = getHost(resolveHost(options))
   const path = generatePath(options.path ?? '')
   const headers: Record<string, string | null> = {
     Authorization: signature,
@@ -202,7 +213,7 @@ export function uploadOptions(
  * @return {IReqOptionsWithBodyResOnly} The request info.
  */
 export function deleteObjectRequest(options: Options, imgUrl: string): IReqOptionsWithBodyResOnly {
-  const { protocol, host } = getHost(options.customUrl ?? '')
+  const { protocol, host } = getHost(resolveHost(options))
   // `pathname` is already percent-encoded, e.g. `/blog/a%20b.png`.
   const pathname = new URL(imgUrl).pathname
   const date = new Date().toUTCString()
@@ -233,7 +244,7 @@ export function deleteObjectRequest(options: Options, imgUrl: string): IReqOptio
  * @return {Promise<boolean>} Whether QingStor answered.
  */
 export async function checkConnectivity(ctx: IPicGo, options: Options): Promise<boolean> {
-  const { protocol, host } = getHost(options.customUrl ?? '')
+  const { protocol, host } = getHost(resolveHost(options))
   const requestOptions: IReqOptionsWithBodyResOnly = {
     method: 'HEAD',
     url: `${protocol}://${options.zone}.${host}/${options.bucket}`,

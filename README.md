@@ -36,12 +36,12 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 |bucket|input|Bucket name. Create it first; only lowercase letters, digits and hyphens (-) are allowed|true|
 |zone|input|Zone id, e.g. `pek3b`. Common QingCloud zones: `pek3a`、`pek3b`、`sh1a`、`gd2`. For private cloud or other regions, type the actual value|true|
 |path|input|Storage path inside the bucket, leave empty for the root directory|false|
-|customUrl|input|Only for private cloud or a custom domain, e.g. `https://qingstor.example.com`|false|
+|endpoint|input|Object storage endpoint. Default `https://qingstor.com`; `https://qsstor.com` is also supported; private cloud can enter its own address|true|
 |deleteRemote|confirm|Delete the matching object from QingStor when an image is removed from the album|false|
 
 In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en). You can verify the config and the connection from the plugin menu ("Check config & connection").
 
-The default endpoint is the official QingCloud one: `https://<bucket>.<zone>.qingstor.com`. Only fill in Custom URL when you use a private cloud or a custom domain.
+The endpoint defaults to the official QingCloud one: `https://<bucket>.<zone>.qingstor.com` (`https://qingstor.com`). `https://qsstor.com` is also supported; for private cloud, set the Endpoint field to your own address.
 
 ### Sync delete
 

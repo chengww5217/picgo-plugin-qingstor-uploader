@@ -35,10 +35,10 @@ const UI: Record<string, LocaleTexts> = {
     'zh-TW': '儲存路徑',
     en: 'Storage path',
   },
-  QINGSTOR_ALIAS_CUSTOM_URL: {
-    'zh-CN': '自定义网址',
-    'zh-TW': '自訂網址',
-    en: 'Custom URL',
+  QINGSTOR_ALIAS_ENDPOINT: {
+    'zh-CN': '对象存储域名',
+    'zh-TW': '物件儲存網域',
+    en: 'Endpoint',
   },
   QINGSTOR_MSG_ACCESS_KEY_ID: {
     'zh-CN': '请输入 AccessKeyId',
@@ -85,10 +85,12 @@ const UI: Record<string, LocaleTexts> = {
     'zh-TW': '圖片會存放到 Bucket 下的此路徑，留空表示根目錄',
     en: 'Images are stored under this path in the bucket. Leave empty for the root.',
   },
-  QINGSTOR_TIPS_CUSTOM_URL: {
-    'zh-CN': '仅私有云或自定义域名时填写，例如 https://qingstor.example.com',
-    'zh-TW': '僅私有雲或自訂網域時填寫，例如 https://qingstor.example.com',
-    en: 'Only for private cloud or a custom domain, e.g. https://qingstor.example.com',
+  QINGSTOR_TIPS_ENDPOINT: {
+    'zh-CN':
+      '默认 https://qingstor.com；也可用 https://qsstor.com；私有云请填写自定义地址，例如 https://qingstor.example.com',
+    'zh-TW':
+      '預設 https://qingstor.com；也可用 https://qsstor.com；私有雲請填寫自訂位址，例如 https://qingstor.example.com',
+    en: 'Default https://qingstor.com; https://qsstor.com is also supported; for private cloud, enter your own address, e.g. https://qingstor.example.com',
   },
   QINGSTOR_MENU_CHECK_CONFIG: {
     'zh-CN': '检查配置与连接',

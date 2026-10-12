@@ -52,13 +52,14 @@ export const config = (ctx: IPicGo): IPluginConfig[] => {
       required: false,
     },
     {
-      name: 'customUrl',
+      name: 'endpoint',
       type: 'input',
-      alias: translate(ctx, 'QINGSTOR_ALIAS_CUSTOM_URL'),
+      alias: translate(ctx, 'QINGSTOR_ALIAS_ENDPOINT'),
       message: 'https://qingstor.com',
-      tips: translate(ctx, 'QINGSTOR_TIPS_CUSTOM_URL'),
-      default: userConfig.customUrl || '',
-      required: false,
+      tips: translate(ctx, 'QINGSTOR_TIPS_ENDPOINT'),
+      // `customUrl` is the pre-`endpoint` key, kept as a fallback for old configs.
+      default: userConfig.endpoint || userConfig.customUrl || 'https://qingstor.com',
+      required: true,
     },
     {
       name: 'deleteRemote',

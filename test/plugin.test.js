@@ -13,6 +13,7 @@ const {
   checkConnectivity,
   normalizeOptions,
   deleteObjectRequest,
+  resolveHost,
 } = require('../dist/utils/index.js')
 const { config } = require('../dist/utils/config.js')
 const plugin = require('../dist/index.js')
@@ -326,6 +327,20 @@ describe('deleteObjectRequest', () => {
   })
 })
 
+describe('resolveHost', () => {
+  it('优先使用 endpoint', () => {
+    assert.equal(resolveHost({ endpoint: 'https://qsstor.com', customUrl: 'https://old.com' }), 'https://qsstor.com')
+  })
+
+  it('缺少 endpoint 时回退到旧的 customUrl', () => {
+    assert.equal(resolveHost({ customUrl: 'https://private.example.com' }), 'https://private.example.com')
+  })
+
+  it('都没有时返回空字符串（走默认域名）', () => {
+    assert.equal(resolveHost({}), '')
+  })
+})
+
 describe('normalizeOptions', () => {
   it('裁剪所有字符串字段的首尾空格', () => {
     const out = normalizeOptions({
@@ -334,6 +349,7 @@ describe('normalizeOptions', () => {
       bucket: ' bkt ',
       zone: ' pek3b ',
       path: ' blog/ ',
+      endpoint: ' https://qsstor.com ',
       customUrl: ' https://qingstor.example.com ',
       deleteRemote: true,
     })
@@ -343,6 +359,7 @@ describe('normalizeOptions', () => {
       bucket: 'bkt',
       zone: 'pek3b',
       path: 'blog/',
+      endpoint: 'https://qsstor.com',
       customUrl: 'https://qingstor.example.com',
       deleteRemote: true,
     })
@@ -350,7 +367,16 @@ describe('normalizeOptions', () => {
 
   it('缺少配置时所有字段为 undefined', () => {
     const out = normalizeOptions(undefined)
-    for (const key of ['accessKeyId', 'accessKeySecret', 'bucket', 'zone', 'path', 'customUrl', 'deleteRemote']) {
+    for (const key of [
+      'accessKeyId',
+      'accessKeySecret',
+      'bucket',
+      'zone',
+      'path',
+      'endpoint',
+      'customUrl',
+      'deleteRemote',
+    ]) {
       assert.equal(out[key], undefined)
     }
   })
@@ -385,6 +411,18 @@ describe('config', () => {
 
   it('全新安装默认区域为空字符串', () => {
     assert.equal(field(build(undefined), 'zone').default, '')
+  })
+
+  it('对象存储域名是输入框，默认 qingstor.com', () => {
+    const endpoint = field(build(undefined), 'endpoint')
+    assert.equal(endpoint.type, 'input')
+    assert.equal(endpoint.default, 'https://qingstor.com')
+    assert.equal(endpoint.required, true)
+  })
+
+  it('旧配置的 customUrl 会回填到 endpoint', () => {
+    const fields = build({ customUrl: 'https://private.example.com' })
+    assert.equal(field(fields, 'endpoint').default, 'https://private.example.com')
   })
 
   it('同步删除是 confirm 开关，默认关闭', () => {

@@ -4,6 +4,9 @@ export interface Options {
   bucket?: string
   zone?: string
   path?: string
+  /** The object storage endpoint url, e.g. `https://qingstor.com`. */
+  endpoint?: string
+  /** Legacy endpoint key (pre-`endpoint`), kept for backward compatibility. */
   customUrl?: string
   /** Delete the matching object when an image is removed from the album. */
   deleteRemote?: boolean
