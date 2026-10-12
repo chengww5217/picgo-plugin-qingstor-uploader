@@ -1,7 +1,7 @@
 {
   "name": "picgo-plugin-qingstor-uploader",
   "version": "1.2.6",
-  "description": "青云对象存储图床; qingstor uploader;",
+  "description": "青云 QingStor（青云对象存储）图床插件 / PicGo uploader for QingCloud object storage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {

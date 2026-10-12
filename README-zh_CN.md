@@ -6,7 +6,7 @@
 
 [English](./README.md) | 简体中文
 
-为 [PicGo](https://github.com/Molunerfinn/PicGo) 开发的一款插件，新增[青云 QingStor](https://www.qingcloud.com/products/objectstorage/)（青云对象存储）图床。
+为 [PicGo](https://github.com/Molunerfinn/PicGo) 提供[青云 QingStor](https://www.qingcloud.com/products/objectstorage/)（青云对象存储）图床支持的插件，把图片上传到 Bucket 并返回下载地址。
 
 ### 特性
 
@@ -17,24 +17,15 @@
 
 ### 安装
 
-**在线安装**
+1. 打开 PicGo，进入 **插件设置**，搜索 **qingstor**。
 
-1. 打开 PicGo，进入 **插件设置**，搜索 **qingstor-uploader** 并安装。
-2. 重启 PicGo。
+   ![](screenshots/plugins.png)
 
-**离线安装**
-
-1. 克隆本仓库。
-2. 打开 PicGo，进入 **插件设置**，点击下方的离线安装按钮。
-
-   ![](screenshots/picgo-offline-install.png)
-
-3. 选择你克隆的文件夹。
-4. 重启 PicGo。
+2. 安装并重启 PicGo。
 
 ### 截图
 
-![](screenshots/screenshot.png)
+![配置](screenshots/config.png)
 
 ### 配置
 

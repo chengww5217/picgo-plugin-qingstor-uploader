@@ -6,7 +6,7 @@
 
 English | [简体中文](./README-zh_CN.md)
 
-A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](https://www.qingcloud.com/products/objectstorage/), QingCloud's object storage.
+A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](https://www.qingcloud.com/products/objectstorage/), QingCloud's object storage: upload images to your bucket and get the download URL.
 
 ### Features
 
@@ -17,24 +17,15 @@ A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](h
 
 ### Installation
 
-**Online**
+1. Open PicGo, go to **Plugin Settings** and search **qingstor**.
 
-1. Open PicGo, go to **Plugin Settings**, search **qingstor-uploader** and install it.
-2. Restart PicGo.
+   ![](screenshots/plugins.png)
 
-**Offline**
-
-1. Clone this repository.
-2. Open PicGo, go to **Plugin Settings** and click the offline-install icon below.
-
-   ![](screenshots/picgo-offline-install.png)
-
-3. Select the folder you cloned.
-4. Restart PicGo.
+2. Install it and restart PicGo.
 
 ### Screenshots
 
-![](screenshots/screenshot.png)
+![Configuration](screenshots/config.png)
 
 ### Configuration
 
@@ -48,7 +39,7 @@ A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](h
 |endpoint|input|Endpoint domain. Default `https://qingstor.com`; `https://qsstor.com` is also supported; for private cloud, enter your own address|yes|
 |deleteRemote|confirm|When on, deleting an image from the PicGo album also deletes the object from QingStor|no|
 
-The config form is localized (zh-CN / zh-TW / en / ja / ko); the table above lists the config keys. Uploaded files are served from `https://<bucket>.<zone>.<endpoint>`, by default `https://<bucket>.<zone>.qingstor.com`. Click **Check config & connection** in the plugin menu to validate the config and test connectivity.
+The config form is localized (zh-CN / zh-TW / en / ja / ko); the table above lists the config keys. The generated object URL looks like `https://<bucket>.<zone>.<endpoint>`, by default `https://<bucket>.<zone>.qingstor.com`. Click **Check config & connection** in the plugin menu to validate the config and test connectivity.
 
 ### Sync delete
 
