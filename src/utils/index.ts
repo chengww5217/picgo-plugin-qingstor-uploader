@@ -126,13 +126,28 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 }
 
 /**
+ * Translate a message with PicGo's built-in i18n.
+ * Falls back to the given text when i18n is unavailable (older PicGo) or when
+ * the key is unknown (picgo returns the key itself in that case).
+ * @param ctx {IPicGo} The context holding the i18n manager.
+ * @param key {string} A built-in PicGo message key.
+ * @param fallback {string} Text used when the key can not be translated.
+ * @return {string} The translated message.
+ */
+function translate (ctx: IPicGo, key: string, fallback: string): string {
+  const message = ctx.i18n?.translate(key)
+  return message && message !== key ? message : fallback
+}
+
+/**
  * Resolve a human readable message from the error.
  * Both a QingStor error code and a plain text message are supported.
+ * @param ctx {IPicGo} The context holding the i18n manager.
  * @param err {QingStorError} The request error.
  * @return {string} The message to show to the user.
  */
-function getErrorMessage (err: QingStorError): string {
-  const fallback = '请检查配置项或网络情况'
+function getErrorMessage (ctx: IPicGo, err: QingStorError): string {
+  const fallback = translate(ctx, 'CHECK_SETTINGS_AND_NETWORK', '请检查配置项或网络情况')
   const raw = err?.error
   let error: unknown = raw
   if (typeof raw === 'string') {
@@ -159,7 +174,7 @@ function getErrorMessage (err: QingStorError): string {
 export function handleError (ctx: IPicGo, err: QingStorError) {
   ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
   ctx.emit('notification', {
-    title: '上传失败！',
-    body: getErrorMessage(err)
+    title: translate(ctx, 'UPLOAD_FAILED', '上传失败！'),
+    body: getErrorMessage(ctx, err)
   })
 }
