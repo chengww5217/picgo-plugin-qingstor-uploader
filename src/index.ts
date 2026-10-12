@@ -29,7 +29,7 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
       await ctx.request(options)
       delete img.base64Image
       delete img.buffer
-      img.imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${fileName}`
+      img.imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${encodeURI(fileName)}`
     }
     return ctx
   } catch (err) {
