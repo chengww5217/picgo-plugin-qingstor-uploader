@@ -10,7 +10,8 @@ const {
   validateOptions,
   handleError,
   buildObjectUrl,
-  checkConnectivity
+  checkConnectivity,
+  normalizeOptions
 } = require('../dist/utils/index.js')
 const { config } = require('../dist/utils/config.js')
 const plugin = require('../dist/index.js')
@@ -246,6 +247,34 @@ describe('uploadOptions', () => {
   })
 })
 
+describe('normalizeOptions', () => {
+  it('裁剪所有字符串字段的首尾空格', () => {
+    const out = normalizeOptions({
+      accessKeyId: ' AK ',
+      accessKeySecret: ' SK ',
+      bucket: ' bkt ',
+      zone: ' pek3b ',
+      path: ' blog/ ',
+      customUrl: ' https://qsstor.example.com '
+    })
+    assert.deepEqual(out, {
+      accessKeyId: 'AK',
+      accessKeySecret: 'SK',
+      bucket: 'bkt',
+      zone: 'pek3b',
+      path: 'blog/',
+      customUrl: 'https://qsstor.example.com'
+    })
+  })
+
+  it('缺少配置时所有字段为 undefined', () => {
+    const out = normalizeOptions(undefined)
+    for (const key of ['accessKeyId', 'accessKeySecret', 'bucket', 'zone', 'path', 'customUrl']) {
+      assert.equal(out[key], undefined)
+    }
+  })
+})
+
 describe('validateOptions', () => {
   it('完整配置通过校验', () => {
     assert.equal(validateOptions(options), '')
@@ -395,6 +424,14 @@ describe('plugin', () => {
 
     assert.equal(requests[0].url, 'https://pek3b.qsstor.com/bkt/blog/a%20b.png')
     assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/blog/a%20b.png')
+  })
+
+  it('配置里多余的首尾空格会被裁剪，避免 signature_not_matched', async () => {
+    const output = [{ fileName: 'status', extname: '', buffer: image }]
+    const { ctx, requests, uploader } = createCtx({ ...options, bucket: ' bkt ', path: ' blog ' }, output)
+    await uploader.handle(ctx)
+
+    assert.equal(requests[0].url, 'https://pek3b.qsstor.com/bkt/blog/status')
   })
 
   it('没有配置时提示找不到配置文件', async () => {

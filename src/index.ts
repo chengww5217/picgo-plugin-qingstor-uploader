@@ -1,6 +1,6 @@
 import { IPicGo } from 'picgo'
 import { registerLocales, translate, translateError } from './i18n'
-import { buildObjectUrl, checkConnectivity, generateSignature, handleError, uploadOptions, validateOptions } from './utils'
+import { buildObjectUrl, checkConnectivity, generateSignature, handleError, normalizeOptions, uploadOptions, validateOptions } from './utils'
 import { config } from './utils/config'
 import { CONFIG_NOT_FOUND_ERROR } from './utils/error'
 import { Options, QingStorError } from './typings'
@@ -15,11 +15,12 @@ interface GuiApi {
 }
 
 const handle = async (ctx: IPicGo): Promise<IPicGo> => {
-  const qingstorOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
-  if (!qingstorOptions) {
+  const rawOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
+  if (!rawOptions) {
     handleError(ctx, CONFIG_NOT_FOUND_ERROR)
     return ctx
   }
+  const qingstorOptions = normalizeOptions(rawOptions)
   const invalidOption = validateOptions(qingstorOptions)
   if (invalidOption) {
     handleError(ctx, { code: invalidOption })
@@ -68,8 +69,8 @@ const guiMenu = (ctx: IPicGo) => {
       label: translate(ctx, 'QINGSTOR_MENU_CHECK_CONFIG', '检查配置与连接'),
       async handle (ctx: IPicGo, guiApi: GuiApi) {
         const title = translate(ctx, 'QINGSTOR_CHECK_TITLE', '青云 QingStor')
-        const qingstorOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
-        if (!qingstorOptions) {
+        const rawOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
+        if (!rawOptions) {
           await guiApi.showMessageBox({
             type: 'warning',
             title,
@@ -77,6 +78,7 @@ const guiMenu = (ctx: IPicGo) => {
           })
           return
         }
+        const qingstorOptions = normalizeOptions(rawOptions)
         const invalidOption = validateOptions(qingstorOptions)
         if (invalidOption) {
           await guiApi.showMessageBox({

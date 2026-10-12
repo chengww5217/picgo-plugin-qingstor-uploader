@@ -10,6 +10,25 @@ const UPLOAD_TIMEOUT = 30000;
 const CONNECT_TIMEOUT = 8000;
 
 /**
+ * Trim every user input so pasted whitespace can't break things.
+ * A leading/trailing space in `bucket` (or any field) would otherwise make the
+ * signed path differ from the request path and fail with `signature_not_matched`.
+ * @param options {Options | undefined} Raw config read from PicGo.
+ * @return {Options} A copy with every string field trimmed.
+ */
+export function normalizeOptions (options?: Options): Options {
+  const raw = options ?? {}
+  return {
+    accessKeyId: raw.accessKeyId?.trim(),
+    accessKeySecret: raw.accessKeySecret?.trim(),
+    bucket: raw.bucket?.trim(),
+    zone: raw.zone?.trim(),
+    path: raw.path?.trim(),
+    customUrl: raw.customUrl?.trim()
+  }
+}
+
+/**
  * Check the user's configuration before uploading.
  * Required fields are also validated by PicGo's config form, but a config file
  * edited by hand (or a half-filled one) would otherwise build a request for
