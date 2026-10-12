@@ -6,7 +6,7 @@
 
 [English](./README.md) | 简体中文
 
-为 [PicGo](https://github.com/Molunerfinn/PicGo) 开发的一款插件，新增了[青云 QingStor](https://www.qingcloud.com/products/qingstor/) 图床。
+为 [PicGo](https://github.com/Molunerfinn/PicGo) 开发的一款插件，新增了[青云 QingStor](https://www.qingcloud.com/products/objectstorage/) 图床。
 
 ### 安装
 
