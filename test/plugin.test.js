@@ -759,11 +759,15 @@ describe('i18n', () => {
 
 describe('remove（同步删除云端对象）', () => {
   const qingstorFile = { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/a.png' }
+  const qingstorFileB = { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/b.png' }
   const withSync = { ...options, deleteRemote: true }
+  // The handler batches consecutive `remove` events; wait for the flush.
+  const flush = () => new Promise(resolve => setTimeout(resolve, 350))
 
   it('开关开启时删除对应对象并通知', async () => {
     const { requests, notifications, remove } = createCtx(withSync)
-    await remove([qingstorFile])
+    remove([qingstorFile])
+    await flush()
 
     assert.equal(requests.length, 1)
     assert.equal(requests[0].method, 'DELETE')
@@ -771,9 +775,21 @@ describe('remove（同步删除云端对象）', () => {
     assert.equal(notifications[0].body, '已从青云 QingStor 删除 1 个对象')
   })
 
+  it('连续多个 remove 事件合并为一条汇总通知', async () => {
+    const { requests, notifications, remove } = createCtx(withSync)
+    remove([qingstorFile])
+    remove([qingstorFileB])
+    await flush()
+
+    assert.equal(requests.length, 2)
+    assert.equal(notifications.length, 1)
+    assert.equal(notifications[0].body, '已从青云 QingStor 删除 2 个对象')
+  })
+
   it('开关关闭时不删除', async () => {
     const { requests, notifications, remove } = createCtx(options)
-    await remove([qingstorFile])
+    remove([qingstorFile])
+    await flush()
 
     assert.equal(requests.length, 0)
     assert.equal(notifications.length, 0)
@@ -781,14 +797,16 @@ describe('remove（同步删除云端对象）', () => {
 
   it('缺少配置时不报错也不删除', async () => {
     const { requests, remove } = createCtx(undefined)
-    await remove([qingstorFile])
+    remove([qingstorFile])
+    await flush()
 
     assert.equal(requests.length, 0)
   })
 
   it('忽略非本图床的条目', async () => {
     const { requests, remove } = createCtx(withSync)
-    await remove([{ type: 'tcyun', imgUrl: 'https://x/y.png' }])
+    remove([{ type: 'tcyun', imgUrl: 'https://x/y.png' }])
+    await flush()
 
     assert.equal(requests.length, 0)
   })
@@ -799,7 +817,8 @@ describe('remove（同步删除云端对象）', () => {
       if (requestOptions.url.includes('b.png')) throw { code: 'permission_denied' }
       requests.push(requestOptions)
     }
-    await remove([qingstorFile, { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/b.png' }])
+    remove([qingstorFile, qingstorFileB])
+    await flush()
 
     assert.equal(requests.length, 1)
     assert.equal(notifications[0].body, '同步删除完成：成功 1 个，失败 1 个，详情见日志')

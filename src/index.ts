@@ -17,6 +17,13 @@ import { Options, QingStorError } from './typings'
 /** The uploader id, also used as the `type` of album entries. */
 const UPLOADER_ID = 'qingstor-uploader'
 
+/**
+ * The PicGo GUI emits one `remove` event per deleted image (a single-element
+ * array each time), so consecutive events are batched here to send one
+ * notification with the total count instead of one per image.
+ */
+const REMOVE_BATCH_DELAY = 250
+
 /** The subset of `guiApi` this plugin uses (see the GUI plugin docs). */
 interface GuiApi {
   showMessageBox: (options: {
@@ -175,7 +182,21 @@ export = (ctx: IPicGo) => {
     })
     // Delete the matching objects when images are removed from the album,
     // if the "sync delete" switch is enabled in the plugin settings.
-    ctx.on('remove', (files: RemovedImage[]) => handleRemove(ctx, files))
+    // The GUI fires one event per image, so batch them into a single summary.
+    let pending: RemovedImage[] = []
+    let flushTimer: ReturnType<typeof setTimeout> | undefined
+    const flush = () => {
+      flushTimer = undefined
+      const files = pending
+      pending = []
+      void handleRemove(ctx, files)
+    }
+    ctx.on('remove', (files: RemovedImage[]) => {
+      if (!Array.isArray(files) || files.length === 0) return
+      pending = pending.concat(files)
+      if (flushTimer) clearTimeout(flushTimer)
+      flushTimer = setTimeout(flush, REMOVE_BATCH_DELAY)
+    })
   }
   return {
     uploader: 'qingstor-uploader',
