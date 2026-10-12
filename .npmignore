@@ -8,3 +8,6 @@ src/
 test/
 .travis.yml
 .idea/
+.github/
+.prettierrc.json
+.prettierignore
