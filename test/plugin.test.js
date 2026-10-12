@@ -758,13 +758,21 @@ describe('i18n', () => {
 })
 
 describe('remove（同步删除云端对象）', () => {
-  const qingstorFile = { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/a.png' }
-  const qingstorFileB = { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/b.png' }
+  const qingstorFile = {
+    type: 'qingstor-uploader',
+    imgUrl: 'https://bkt.pek3b.qingstor.com/blog/a.png',
+    fileName: 'a.png',
+  }
+  const qingstorFileB = {
+    type: 'qingstor-uploader',
+    imgUrl: 'https://bkt.pek3b.qingstor.com/blog/b.png',
+    fileName: 'b.png',
+  }
   const withSync = { ...options, deleteRemote: true }
   // The handler batches consecutive `remove` events; wait for the flush.
   const flush = () => new Promise(resolve => setTimeout(resolve, 350))
 
-  it('开关开启时删除对应对象并通知', async () => {
+  it('删除单个对象时通知里带上文件名', async () => {
     const { requests, notifications, remove } = createCtx(withSync)
     remove([qingstorFile])
     await flush()
@@ -772,7 +780,15 @@ describe('remove（同步删除云端对象）', () => {
     assert.equal(requests.length, 1)
     assert.equal(requests[0].method, 'DELETE')
     assert.equal(requests[0].url, 'https://pek3b.qingstor.com/bkt/blog/a.png')
-    assert.equal(notifications[0].body, '已从青云 QingStor 删除 1 个对象')
+    assert.equal(notifications[0].body, '已从青云 QingStor 删除 a.png')
+  })
+
+  it('没有 fileName 时用图片地址兜底', async () => {
+    const { notifications, remove } = createCtx(withSync)
+    remove([{ type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/a.png' }])
+    await flush()
+
+    assert.equal(notifications[0].body, '已从青云 QingStor 删除 https://bkt.pek3b.qingstor.com/blog/a.png')
   })
 
   it('连续多个 remove 事件合并为一条汇总通知', async () => {

@@ -201,6 +201,13 @@ const UI: Record<string, LocaleTexts> = {
     ja: '青雲 QingStor から ${count} 個のオブジェクトを削除しました',
     ko: 'QingStor에서 오브젝트 ${count}개를 삭제했습니다',
   },
+  QINGSTOR_DELETE_SUCCESS_ONE: {
+    'zh-CN': '已从青云 QingStor 删除 ${name}',
+    'zh-TW': '已從青雲 QingStor 刪除 ${name}',
+    en: 'Deleted ${name} from QingStor',
+    ja: '青雲 QingStor から ${name} を削除しました',
+    ko: 'QingStor에서 ${name}을(를) 삭제했습니다',
+  },
   QINGSTOR_DELETE_PARTIAL: {
     'zh-CN': '同步删除完成：成功 ${success} 个，失败 ${failed} 个，详情见日志',
     'zh-TW': '同步刪除完成：成功 ${success} 個，失敗 ${failed} 個，詳情見日誌',

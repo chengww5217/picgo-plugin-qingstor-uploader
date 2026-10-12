@@ -37,6 +37,7 @@ interface GuiApi {
 interface RemovedImage {
   type?: string
   imgUrl?: string
+  fileName?: string
 }
 
 const handle = async (ctx: IPicGo): Promise<IPicGo> => {
@@ -103,7 +104,9 @@ async function syncDelete(ctx: IPicGo, options: Options, files: RemovedImage[]):
   const title = translate(ctx, 'QINGSTOR_NAME')
   const body = failures.length
     ? translate(ctx, 'QINGSTOR_DELETE_PARTIAL', { success, failed: failures.length })
-    : translate(ctx, 'QINGSTOR_DELETE_SUCCESS', { count: success })
+    : files.length === 1
+      ? translate(ctx, 'QINGSTOR_DELETE_SUCCESS_ONE', { name: files[0].fileName || files[0].imgUrl || '' })
+      : translate(ctx, 'QINGSTOR_DELETE_SUCCESS', { count: success })
   ctx.emit('notification', { title, body })
 }
 
