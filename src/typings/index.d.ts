@@ -5,6 +5,8 @@ export interface Options {
   zone?: string
   path?: string
   customUrl?: string
+  /** Delete the matching object when an image is removed from the album. */
+  deleteRemote?: boolean
 }
 
 /** Languages PicGo ships with. */

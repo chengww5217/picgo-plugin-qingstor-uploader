@@ -3,6 +3,7 @@ import { registerLocales, translate, translateError } from './i18n'
 import {
   buildObjectUrl,
   checkConnectivity,
+  deleteObjectRequest,
   generateSignature,
   handleError,
   normalizeOptions,
@@ -13,13 +14,22 @@ import { config } from './utils/config'
 import { CONFIG_NOT_FOUND_ERROR } from './utils/error'
 import { Options, QingStorError } from './typings'
 
+/** The uploader id, also used as the `type` of album entries. */
+const UPLOADER_ID = 'qingstor-uploader'
+
 /** The subset of `guiApi` this plugin uses (see the GUI plugin docs). */
 interface GuiApi {
   showMessageBox: (options: {
     title?: string
     message?: string
     type?: 'none' | 'info' | 'error' | 'question' | 'warning'
-  }) => Promise<{ result: number; checkboxChecked: boolean }>
+  }) => Promise<{ result: number; checkboxChecked?: boolean }>
+}
+
+/** An image removed from the album, as sent by the `remove` event. */
+interface RemovedImage {
+  type?: string
+  imgUrl?: string
 }
 
 const handle = async (ctx: IPicGo): Promise<IPicGo> => {
@@ -70,25 +80,67 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
 }
 
 /**
+ * Delete the given objects from QingStor, then notify the user with the result.
+ * @param ctx {IPicGo} The context used to send requests and notify.
+ * @param options {Options} The active QingStor config.
+ * @param files {RemovedImage[]} The removed album entries (with `imgUrl`).
+ * @return {Promise<void>} Resolves when the requests and notification are done.
+ */
+async function syncDelete(ctx: IPicGo, options: Options, files: RemovedImage[]): Promise<void> {
+  const results = await Promise.allSettled(
+    files.map(file => ctx.request(deleteObjectRequest(options, file.imgUrl as string))),
+  )
+  const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+  failures.forEach(result => ctx.log.error('Qingstor delete error: ', JSON.stringify(result.reason)))
+  const success = results.length - failures.length
+  const title = translate(ctx, 'QINGSTOR_CHECK_TITLE')
+  const body = failures.length
+    ? translate(ctx, 'QINGSTOR_DELETE_PARTIAL', { success, failed: failures.length })
+    : translate(ctx, 'QINGSTOR_DELETE_SUCCESS', { count: success })
+  ctx.emit('notification', { title, body })
+}
+
+/**
+ * The `remove` event handler: when the user deletes QingStor images from the
+ * album, delete the matching objects too if the "sync delete" switch is on.
+ * @param ctx {IPicGo} The context.
+ * @param files {RemovedImage[]} The removed album entries.
+ * @return {Promise<void>} Never rejects.
+ */
+async function handleRemove(ctx: IPicGo, files: RemovedImage[]): Promise<void> {
+  try {
+    const rawOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
+    if (!rawOptions) return
+    const options = normalizeOptions(rawOptions)
+    if (options.deleteRemote !== true) return
+    if (validateOptions(options)) return
+    const targets = (files ?? []).filter(
+      file => file?.type === UPLOADER_ID && typeof file.imgUrl === 'string' && file.imgUrl.length > 0,
+    )
+    if (targets.length === 0) return
+
+    await syncDelete(ctx, options, targets)
+  } catch (err) {
+    ctx.log.error('Qingstor remove handler error: ', JSON.stringify(err))
+  }
+}
+
+/**
  * GUI-only menu, shown in the plugin page of the PicGo app.
  * Lets the user verify the config and whether QingStor is reachable.
  */
 const guiMenu = (ctx: IPicGo) => {
   return [
     {
-      label: translate(ctx, 'QINGSTOR_MENU_CHECK_CONFIG', '检查配置与连接'),
+      label: translate(ctx, 'QINGSTOR_MENU_CHECK_CONFIG'),
       async handle(ctx: IPicGo, guiApi: GuiApi) {
-        const title = translate(ctx, 'QINGSTOR_CHECK_TITLE', '青云 QingStor')
+        const title = translate(ctx, 'QINGSTOR_CHECK_TITLE')
         const rawOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
         if (!rawOptions) {
           await guiApi.showMessageBox({
             type: 'warning',
             title,
-            message: translate(
-              ctx,
-              'QINGSTOR_CHECK_NO_CONFIG',
-              '还没有配置青云 QingStor 图床，请先在图床设置里完成配置',
-            ),
+            message: translate(ctx, 'QINGSTOR_CHECK_NO_CONFIG'),
           })
           return
         }
@@ -106,13 +158,7 @@ const guiMenu = (ctx: IPicGo) => {
         await guiApi.showMessageBox({
           type: reachable ? 'info' : 'warning',
           title,
-          message: translate(
-            ctx,
-            reachable ? 'QINGSTOR_CHECK_CONNECT_OK' : 'QINGSTOR_CHECK_CONNECT_FAIL',
-            reachable
-              ? '配置完整，已成功连接青云服务'
-              : '配置完整，但无法连接青云服务，请检查区域(zone)、自定义网址和网络',
-          ),
+          message: translate(ctx, reachable ? 'QINGSTOR_CHECK_CONNECT_OK' : 'QINGSTOR_CHECK_CONNECT_FAIL'),
         })
       },
     },
@@ -127,6 +173,9 @@ export = (ctx: IPicGo) => {
       name: '青云 QingStor',
       config,
     })
+    // Delete the matching objects when images are removed from the album,
+    // if the "sync delete" switch is enabled in the plugin settings.
+    ctx.on('remove', (files: RemovedImage[]) => handleRemove(ctx, files))
   }
   return {
     uploader: 'qingstor-uploader',

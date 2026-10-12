@@ -12,6 +12,7 @@ const {
   buildObjectUrl,
   checkConnectivity,
   normalizeOptions,
+  deleteObjectRequest,
 } = require('../dist/utils/index.js')
 const { config } = require('../dist/utils/config.js')
 const plugin = require('../dist/index.js')
@@ -77,6 +78,7 @@ function createCtx(config, output = []) {
   const notifications = []
   let uploader
   let guiMenu
+  const listeners = {}
   const ctx = {
     getConfig: () => config,
     output,
@@ -94,6 +96,9 @@ function createCtx(config, output = []) {
     emit: (name, payload) => {
       notifications.push(payload)
     },
+    on: (name, handler) => {
+      listeners[name] = handler
+    },
   }
   const instance = plugin(ctx)
   instance.register()
@@ -102,6 +107,7 @@ function createCtx(config, output = []) {
     ctx,
     requests,
     notifications,
+    remove: files => listeners.remove(files),
     get uploader() {
       return uploader
     },
@@ -293,6 +299,33 @@ describe('uploadOptions', () => {
   })
 })
 
+describe('deleteObjectRequest', () => {
+  const request = deleteObjectRequest(options, 'https://bkt.pek3b.qingstor.com/blog/a%20b.png')
+
+  it('根据公开地址反推对象 key，发出 DELETE 请求', () => {
+    assert.equal(request.method, 'DELETE')
+    assert.equal(request.url, 'https://pek3b.qingstor.com/bkt/blog/a%20b.png')
+    assert.equal(request.headers['User-Agent'], `picgo_plugin_qingstor/${require('../package.json').version}`)
+  })
+
+  it('签名串为 DELETE + 空 Content-MD5/Content-Type + 资源路径', () => {
+    const canonical = '/bkt/blog/a%20b.png'
+    const expected = `QS AK:${crypto
+      .createHmac('sha256', options.accessKeySecret)
+      .update(`DELETE\n\n\n${request.headers.Date}\n${canonical}`)
+      .digest('base64')}`
+    assert.equal(request.headers.Authorization, expected)
+  })
+
+  it('跟随自定义域名与协议', () => {
+    const custom = deleteObjectRequest(
+      { ...options, customUrl: 'http://qingstor.example.com' },
+      'http://bkt.pek3b.qingstor.example.com/blog/a.png',
+    )
+    assert.equal(custom.url, 'http://pek3b.qingstor.example.com/bkt/blog/a.png')
+  })
+})
+
 describe('normalizeOptions', () => {
   it('裁剪所有字符串字段的首尾空格', () => {
     const out = normalizeOptions({
@@ -302,6 +335,7 @@ describe('normalizeOptions', () => {
       zone: ' pek3b ',
       path: ' blog/ ',
       customUrl: ' https://qingstor.example.com ',
+      deleteRemote: true,
     })
     assert.deepEqual(out, {
       accessKeyId: 'AK',
@@ -310,12 +344,13 @@ describe('normalizeOptions', () => {
       zone: 'pek3b',
       path: 'blog/',
       customUrl: 'https://qingstor.example.com',
+      deleteRemote: true,
     })
   })
 
   it('缺少配置时所有字段为 undefined', () => {
     const out = normalizeOptions(undefined)
-    for (const key of ['accessKeyId', 'accessKeySecret', 'bucket', 'zone', 'path', 'customUrl']) {
+    for (const key of ['accessKeyId', 'accessKeySecret', 'bucket', 'zone', 'path', 'customUrl', 'deleteRemote']) {
       assert.equal(out[key], undefined)
     }
   })
@@ -350,6 +385,13 @@ describe('config', () => {
 
   it('全新安装默认区域为空字符串', () => {
     assert.equal(field(build(undefined), 'zone').default, '')
+  })
+
+  it('同步删除是 confirm 开关，默认关闭', () => {
+    const off = field(build(undefined), 'deleteRemote')
+    assert.equal(off.type, 'confirm')
+    assert.equal(off.default, false)
+    assert.equal(field(build({ deleteRemote: true }), 'deleteRemote').default, true)
   })
 
   it('每个字段都带有 alias 与 tips', () => {
@@ -605,5 +647,54 @@ describe('guiMenu', () => {
     })
     assert.equal(boxes[0].type, 'warning')
     assert.equal(boxes[0].message, '配置完整，但无法连接青云服务，请检查区域(zone)、自定义网址和网络')
+  })
+})
+
+describe('remove（同步删除云端对象）', () => {
+  const qingstorFile = { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/a.png' }
+  const withSync = { ...options, deleteRemote: true }
+
+  it('开关开启时删除对应对象并通知', async () => {
+    const { requests, notifications, remove } = createCtx(withSync)
+    await remove([qingstorFile])
+
+    assert.equal(requests.length, 1)
+    assert.equal(requests[0].method, 'DELETE')
+    assert.equal(requests[0].url, 'https://pek3b.qingstor.com/bkt/blog/a.png')
+    assert.equal(notifications[0].body, '已从青云 QingStor 删除 1 个对象')
+  })
+
+  it('开关关闭时不删除', async () => {
+    const { requests, notifications, remove } = createCtx(options)
+    await remove([qingstorFile])
+
+    assert.equal(requests.length, 0)
+    assert.equal(notifications.length, 0)
+  })
+
+  it('缺少配置时不报错也不删除', async () => {
+    const { requests, remove } = createCtx(undefined)
+    await remove([qingstorFile])
+
+    assert.equal(requests.length, 0)
+  })
+
+  it('忽略非本图床的条目', async () => {
+    const { requests, remove } = createCtx(withSync)
+    await remove([{ type: 'tcyun', imgUrl: 'https://x/y.png' }])
+
+    assert.equal(requests.length, 0)
+  })
+
+  it('部分删除失败时给出汇总通知', async () => {
+    const { ctx, requests, notifications, remove } = createCtx(withSync)
+    ctx.request = async requestOptions => {
+      if (requestOptions.url.includes('b.png')) throw { code: 'permission_denied' }
+      requests.push(requestOptions)
+    }
+    await remove([qingstorFile, { type: 'qingstor-uploader', imgUrl: 'https://bkt.pek3b.qingstor.com/blog/b.png' }])
+
+    assert.equal(requests.length, 1)
+    assert.equal(notifications[0].body, '同步删除完成：成功 1 个，失败 1 个，详情见日志')
   })
 })

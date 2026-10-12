@@ -47,6 +47,7 @@ export function normalizeOptions(options?: Options): Options {
     zone: raw.zone?.trim(),
     path: raw.path?.trim(),
     customUrl: raw.customUrl?.trim(),
+    deleteRemote: raw.deleteRemote,
   }
 }
 
@@ -193,6 +194,37 @@ export function uploadOptions(
 }
 
 /**
+ * Build a signed DELETE request for an object, derived from its public url.
+ * Using the url (instead of the current path config) keeps the object key
+ * correct even if the user later changes the storage path.
+ * @param options {Options} User entered infos.
+ * @param imgUrl {string} The uploaded object's public url.
+ * @return {IReqOptionsWithBodyResOnly} The request info.
+ */
+export function deleteObjectRequest(options: Options, imgUrl: string): IReqOptionsWithBodyResOnly {
+  const { protocol, host } = getHost(options.customUrl ?? '')
+  // `pathname` is already percent-encoded, e.g. `/blog/a%20b.png`.
+  const pathname = new URL(imgUrl).pathname
+  const date = new Date().toUTCString()
+  const canonical = `/${options.bucket}${pathname}`
+  const strToSign = `DELETE\n\n\n${date}\n${canonical}`
+  const signature = crypto
+    .createHmac('sha256', options.accessKeySecret ?? '')
+    .update(strToSign)
+    .digest('base64')
+  return {
+    method: 'DELETE',
+    url: `${protocol}://${options.zone}.${host}/${options.bucket}${pathname}`,
+    timeout: UPLOAD_TIMEOUT,
+    headers: {
+      Authorization: `QS ${options.accessKeyId}:${signature}`,
+      Date: date,
+      'User-Agent': UserAgent,
+    },
+  }
+}
+
+/**
  * Best-effort reachability check for the configured endpoint.
  * Any HTTP response (even a 4xx) means the host is reachable; only a network
  * level failure (no response at all) is treated as unreachable.
@@ -223,7 +255,7 @@ export async function checkConnectivity(ctx: IPicGo, options: Options): Promise<
  * @return {string} The message to show to the user.
  */
 function getErrorMessage(ctx: IPicGo, err: QingStorError): string {
-  const fallback = translate(ctx, 'CHECK_SETTINGS_AND_NETWORK', '请检查配置项或网络情况')
+  const fallback = translate(ctx, 'CHECK_SETTINGS_AND_NETWORK')
   const raw = err?.error
   let error: unknown = raw
   if (typeof raw === 'string') {
@@ -251,7 +283,7 @@ function getErrorMessage(ctx: IPicGo, err: QingStorError): string {
 export function handleError(ctx: IPicGo, err: QingStorError) {
   ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
   ctx.emit('notification', {
-    title: translate(ctx, 'UPLOAD_FAILED', '上传失败！'),
+    title: translate(ctx, 'UPLOAD_FAILED'),
     body: getErrorMessage(ctx, err),
   })
 }

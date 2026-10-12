@@ -120,6 +120,31 @@ const UI: Record<string, LocaleTexts> = {
     'zh-TW': '設定完整，但無法連線青雲服務，請檢查區域(zone)、自訂網址與網路',
     en: 'Configuration is complete, but QingStor is unreachable. Please check the zone, custom URL and network.',
   },
+  QINGSTOR_ALIAS_DELETE_REMOTE: {
+    'zh-CN': '同步删除云端对象',
+    'zh-TW': '同步刪除雲端物件',
+    en: 'Sync delete cloud object',
+  },
+  QINGSTOR_MSG_DELETE_REMOTE: {
+    'zh-CN': '删除相册图片时，是否同步删除对象存储中的对象？',
+    'zh-TW': '刪除相簿圖片時，是否同步刪除物件儲存中的物件？',
+    en: 'Also delete the object from the object storage when deleting an album image?',
+  },
+  QINGSTOR_TIPS_DELETE_REMOTE: {
+    'zh-CN': '开启后，从相册删除青云 QingStor 的图片时会一并删除对象存储中的对象；关闭则只删除相册记录',
+    'zh-TW': '開啟後，從相簿刪除青雲 QingStor 的圖片時會一併刪除物件儲存中的物件；關閉則只刪除相簿記錄',
+    en: 'When on, deleting a QingStor image from the album also deletes the object from the storage. When off, only the album entry is removed.',
+  },
+  QINGSTOR_DELETE_SUCCESS: {
+    'zh-CN': '已从青云 QingStor 删除 ${count} 个对象',
+    'zh-TW': '已從青雲 QingStor 刪除 ${count} 個物件',
+    en: 'Deleted ${count} object(s) from QingStor',
+  },
+  QINGSTOR_DELETE_PARTIAL: {
+    'zh-CN': '同步删除完成：成功 ${success} 个，失败 ${failed} 个，详情见日志',
+    'zh-TW': '同步刪除完成：成功 ${success} 個，失敗 ${failed} 個，詳情見日誌',
+    en: 'Sync delete finished: ${success} succeeded, ${failed} failed. See the log for details.',
+  },
 }
 
 function buildLocales(language: Language): Record<string, string> {
@@ -135,6 +160,18 @@ function buildLocales(language: Language): Record<string, string> {
   }
   return locales
 }
+
+/**
+ * Chinese fallback for the PicGo built-in keys this plugin uses, so a missing
+ * translation never leaks a raw key. Owned strings live in `UI`/`ERRORS` above.
+ */
+const BUILTIN_FALLBACKS: Record<string, string> = {
+  UPLOAD_FAILED: '上传失败！',
+  CHECK_SETTINGS_AND_NETWORK: '请检查配置项或网络情况',
+}
+
+/** zh-CN text for every key this plugin may translate, used as a last resort. */
+const FALLBACKS: Record<string, string> = { ...buildLocales('zh-CN'), ...BUILTIN_FALLBACKS }
 
 /**
  * Register every supported language pack on the PicGo i18n manager.
@@ -153,17 +190,29 @@ export function registerLocales(ctx: IPicGo): void {
   }
 }
 
+function fillArgs(text: string, args?: Record<string, string | number>): string {
+  if (!args) return text
+  return text.replace(/\$\{(\w+)\}/g, (match, name) => (name in args ? String(args[name]) : match))
+}
+
 /**
- * Translate a message, falling back to `fallback` when i18n is unavailable
- * or when the key is unknown (picgo returns the key itself in that case).
+ * Translate an i18n key, replacing `${name}` placeholders from `args`.
+ * Falls back to the plugin's zh-CN text when i18n is unavailable or the
+ * current language has no entry, so a raw key is never shown to the user.
  * @param ctx {IPicGo} The context holding the i18n manager.
  * @param key {string} The i18n key.
- * @param fallback {string} Text used when the key can not be translated.
+ * @param args {Record<string, string | number>} Values for `${name}` placeholders.
  * @return {string} The translated message.
  */
-export function translate(ctx: IPicGo, key: string, fallback: string): string {
-  const message = ctx?.i18n?.translate(key)
-  return message && message !== key ? message : fallback
+export function translate(ctx: IPicGo, key: string, args?: Record<string, string | number>): string {
+  let i18nArgs: Record<string, string> | undefined
+  if (args) {
+    i18nArgs = {}
+    for (const [name, value] of Object.entries(args)) i18nArgs[name] = String(value)
+  }
+  const message = ctx?.i18n?.translate(key, i18nArgs)
+  if (message && message !== key) return message
+  return fillArgs(FALLBACKS[key] ?? key, args)
 }
 
 /**
@@ -173,11 +222,7 @@ export function translate(ctx: IPicGo, key: string, fallback: string): string {
  * @return {string | undefined} The message, or undefined for an unknown code.
  */
 export function translateError(ctx: IPicGo, code: string): string | undefined {
-  if (ERRORS[code]) {
-    return translate(ctx, `QINGSTOR_ERR_${code.toUpperCase()}`, ERRORS[code]['zh-CN'])
-  }
-  if (NETWORK_ERRORS[code]) {
-    return translate(ctx, `QINGSTOR_NET_${code.toUpperCase()}`, NETWORK_ERRORS[code]['zh-CN'])
-  }
+  if (ERRORS[code]) return translate(ctx, `QINGSTOR_ERR_${code.toUpperCase()}`)
+  if (NETWORK_ERRORS[code]) return translate(ctx, `QINGSTOR_NET_${code.toUpperCase()}`)
   return undefined
 }

@@ -37,8 +37,13 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 |zone|input|Zone id, e.g. `pek3b`. Common QingCloud zones: `pek3a`、`pek3b`、`sh1a`、`gd2`. For private cloud or other regions, type the actual value|true|
 |path|input|Storage path inside the bucket, leave empty for the root directory|false|
 |customUrl|input|Only for private cloud or a custom domain, e.g. `https://qingstor.example.com`|false|
+|deleteRemote|confirm|Delete the matching object from QingStor when an image is removed from the album|false|
 
 In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en). You can verify the config and the connection from the plugin menu ("Check config & connection").
 
 The default endpoint is the official QingCloud one: `https://<bucket>.<zone>.qingstor.com`. Only fill in Custom URL when you use a private cloud or a custom domain.
+
+### Sync delete
+
+Turn on the **"Sync delete cloud object"** switch in the plugin settings to also delete the matching object from QingStor whenever you delete an image from the PicGo album. The result is reported with a notification. When the switch is off (the default), deleting from the album only removes the album entry. The object key is derived from the image URL, so it keeps working even after you change the storage path.
 

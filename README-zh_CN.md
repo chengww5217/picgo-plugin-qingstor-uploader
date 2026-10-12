@@ -36,9 +36,14 @@
 |zone|input|区域代码，例如 `pek3b`。青云公有云常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请直接填写实际值|true|
 |path|input|上传时默认存储路径，留空表示根目录|false|
 |customUrl|input|仅私有云或自定义域名时填写，示例：`https://qingstor.example.com`|false|
+|deleteRemote|confirm|删除相册图片时，同步删除对象存储中的对象|false|
 
 在 PicGo 客户端里，每个配置项都带有本地化的标题与提示（简体中文 / 繁體中文 / English）。可以在插件菜单里点击「检查配置与连接」来校验配置并测试连通性。
 
 默认使用青云官方 Endpoint：`https://<bucket>.<zone>.qingstor.com`。仅当你使用私有云或自定义域名时才需要填写「自定义网址」。
+
+### 同步删除
+
+在插件设置里打开 **「同步删除云端对象」** 开关后，从 PicGo 相册删除青云 QingStor 的图片时，会同时对对象存储发起 `DELETE` 删除对应对象，并用通知反馈结果。开关默认关闭，此时只删除相册记录。对象 key 由图片地址反推，即使之后修改了存储路径也能删对。
 
 
