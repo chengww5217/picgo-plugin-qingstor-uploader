@@ -14,14 +14,6 @@
       "node"
     ],
     "outDir": "dist",
-    // It's shit.
-    // "baseUrl": "src",
-    // "paths": {
-    //   "@core/*": ["core/*"],
-    //   "@lib/*": ["lib/*"],
-    //   "@plugins/*": ["plugins/*"],
-    //   "@utils/*": ["utils/*"]
-    // },
     "lib": [
       "es2018",
       "DOM"

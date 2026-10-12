@@ -30,11 +30,15 @@
 
 |参数名称|类型|描述|是否必须|
 |:--:|:--:|:--:|:--:|
-|accessKeyId|input|AccessKeyId|true|
-|accessKeySecret|password|AccessKeySecret|true|
-|bucket|input|Bucket 名称|true|
-|zone|input|区域 zone|true|
-|path|input|上传时默认存储路径|false|
-|customUrl|input|私有云网址（示例：https://qingstor.com ）|false|
+|accessKeyId|input|AccessKeyId，在青云控制台「API 密钥」页面创建并获取|true|
+|accessKeySecret|password|与 AccessKeyId 配对使用，请妥善保管，不要泄露|true|
+|bucket|input|Bucket 名称，需要提前创建，名称只支持小写字母、数字和中划线（-）|true|
+|zone|input|区域代码，例如 `pek3b`。青云公有云常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请直接填写实际值|true|
+|path|input|上传时默认存储路径，留空表示根目录|false|
+|customUrl|input|仅私有云或自定义域名时填写，示例：`https://qsstor.example.com`|false|
+
+在 PicGo 客户端里，每个配置项都带有本地化的标题与提示（简体中文 / 繁體中文 / English）。可以在插件菜单里点击「检查配置与连接」来校验配置并测试连通性。
+
+默认使用青云官方 Endpoint：`https://<bucket>.<zone>.qsstor.com`。仅当你使用私有云或自定义域名时才需要填写「自定义网址」。
 
 

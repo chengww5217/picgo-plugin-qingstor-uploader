@@ -1,17 +1,19 @@
 import {Host, Options, Protocol, QingStorError, SignatureInfo} from '../typings'
 import crypto from 'crypto'
 import {IReqOptionsWithBodyResOnly, IPicGo} from 'picgo'
-import { ERRORS, NETWORK_ERRORS } from './error'
+import { translate, translateError } from '../i18n'
 
 const UserAgent = 'picgo_plugin_qingstor';
 /** Timeout of the upload request, in milliseconds. */
 const UPLOAD_TIMEOUT = 30000;
+/** Timeout of the connectivity check, in milliseconds. */
+const CONNECT_TIMEOUT = 8000;
 
 /**
  * Check the user's configuration before uploading.
  * Required fields are also validated by PicGo's config form, but a config file
  * edited by hand (or a half-filled one) would otherwise build a request for
- * an invalid url such as https://.qingstor.com/... and fail with a confusing error.
+ * an invalid url such as https://.qsstor.com/... and fail with a confusing error.
  * @param options {Options} PicGo options, AKA infos user entered.
  * @return {string} The error code, or '' when the configuration is valid.
  */
@@ -51,7 +53,7 @@ export function generatePath (path: string): string {
   return '/' + encodeURI(trimmedPath)
 }
 
-const QINGSTOR_HOST = 'qingstor.com'
+const QINGSTOR_HOST = 'qsstor.com'
 const HTTP_PROTOCOL = 'http'
 const HTTP_PREFIX = HTTP_PROTOCOL + '://'
 const HTTPS_PROTOCOL = 'https'
@@ -76,6 +78,18 @@ export function getHost (customUrl: string): Host {
     }
   }
   return { protocol, host }
+}
+
+/**
+ * Build the public url of an uploaded image (bucket as a subdomain).
+ * @param options {Options} User entered infos.
+ * @param fileName {string} The uploaded image's name.
+ * @return {string} The public url.
+ */
+export function buildObjectUrl (options: Options, fileName: string): string {
+  const url = getHost(options.customUrl ?? '')
+  const path = generatePath(options.path ?? '')
+  return `${url.protocol}://${options.bucket}.${options.zone}.${url.host}${path}/${encodeURI(fileName)}`
 }
 
 const imageMime: Record<string, string> = {
@@ -122,17 +136,26 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 }
 
 /**
- * Translate a message with PicGo's built-in i18n.
- * Falls back to the given text when i18n is unavailable (older PicGo) or when
- * the key is unknown (picgo returns the key itself in that case).
- * @param ctx {IPicGo} The context holding the i18n manager.
- * @param key {string} A built-in PicGo message key.
- * @param fallback {string} Text used when the key can not be translated.
- * @return {string} The translated message.
+ * Best-effort reachability check for the configured endpoint.
+ * Any HTTP response (even a 4xx) means the host is reachable; only a network
+ * level failure (no response at all) is treated as unreachable.
+ * @param ctx {IPicGo} The context used to send the request.
+ * @param options {Options} User entered infos.
+ * @return {Promise<boolean>} Whether QingStor answered.
  */
-function translate (ctx: IPicGo, key: string, fallback: string): string {
-  const message = ctx.i18n?.translate(key)
-  return message && message !== key ? message : fallback
+export async function checkConnectivity (ctx: IPicGo, options: Options): Promise<boolean> {
+  const { protocol, host } = getHost(options.customUrl ?? '')
+  const requestOptions: IReqOptionsWithBodyResOnly = {
+    method: 'HEAD',
+    url: `${protocol}://${options.zone}.${host}/${options.bucket}`,
+    timeout: CONNECT_TIMEOUT
+  }
+  try {
+    await ctx.request(requestOptions)
+    return true
+  } catch (err) {
+    return Boolean((err as { response?: unknown })?.response)
+  }
 }
 
 /**
@@ -159,7 +182,7 @@ function getErrorMessage (ctx: IPicGo, err: QingStorError): string {
     err?.code ??
     err?.response?.body?.code
   if (!code) return fallback
-  return ERRORS[code] || NETWORK_ERRORS[code] || code
+  return translateError(ctx, code) ?? code
 }
 
 /**

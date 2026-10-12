@@ -7,6 +7,12 @@ export interface Options {
   customUrl?: string,
 }
 
+/** Languages PicGo ships with. */
+export type Language = 'zh-CN' | 'zh-TW' | 'en'
+
+/** One user facing text, translated for every supported language. */
+export type LocaleTexts = Record<Language, string>
+
 export type Protocol = 'http' | 'https'
 
 export interface Host {

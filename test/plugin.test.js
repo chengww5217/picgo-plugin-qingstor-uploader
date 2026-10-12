@@ -8,8 +8,11 @@ const {
   generateSignature,
   uploadOptions,
   validateOptions,
-  handleError
+  handleError,
+  buildObjectUrl,
+  checkConnectivity
 } = require('../dist/utils/index.js')
+const { config } = require('../dist/utils/config.js')
 const plugin = require('../dist/index.js')
 
 const options = {
@@ -73,6 +76,7 @@ function createCtx (config, output = []) {
   const requests = []
   const notifications = []
   let uploader
+  let guiMenu
   const ctx = {
     getConfig: () => config,
     output,
@@ -81,8 +85,16 @@ function createCtx (config, output = []) {
     helper: { uploader: { register: (id, handler) => { uploader = handler } } },
     emit: (name, payload) => { notifications.push(payload) }
   }
-  plugin(ctx).register()
-  return { ctx, requests, notifications, get uploader () { return uploader } }
+  const instance = plugin(ctx)
+  instance.register()
+  guiMenu = instance.guiMenu
+  return {
+    ctx,
+    requests,
+    notifications,
+    get uploader () { return uploader },
+    get guiMenu () { return guiMenu }
+  }
 }
 
 describe('generatePath', () => {
@@ -103,7 +115,7 @@ describe('generatePath', () => {
 
 describe('getHost', () => {
   it('默认使用 https 与青云域名', () => {
-    assert.deepEqual(getHost(''), { protocol: 'https', host: 'qingstor.com' })
+    assert.deepEqual(getHost(''), { protocol: 'https', host: 'qsstor.com' })
   })
 
   it('支持自定义域名', () => {
@@ -116,6 +128,45 @@ describe('getHost', () => {
 
   it('保留显式的 https 协议', () => {
     assert.deepEqual(getHost('https://qingstor.example.com'), { protocol: 'https', host: 'qingstor.example.com' })
+  })
+})
+
+describe('buildObjectUrl', () => {
+  it('按 bucket/zone/路径拼出公开地址', () => {
+    assert.equal(buildObjectUrl(options, 'a.png'), 'https://bkt.pek3b.qsstor.com/a.png')
+  })
+
+  it('包含编码后的文件名与自定义路径', () => {
+    assert.equal(buildObjectUrl({ ...options, path: 'blog/' }, 'a b.png'), 'https://bkt.pek3b.qsstor.com/blog/a%20b.png')
+  })
+
+  it('跟随自定义域名', () => {
+    assert.equal(buildObjectUrl({ ...options, customUrl: 'https://qingstor.example.com' }, 'a.png'), 'https://bkt.pek3b.qingstor.example.com/a.png')
+  })
+})
+
+describe('checkConnectivity', () => {
+  it('收到任意 HTTP 响应即视为可达', async () => {
+    const ctx = { request: async () => ({ status: 403 }) }
+    assert.equal(await checkConnectivity(ctx, options), true)
+  })
+
+  it('只有网络层失败（无响应）才算不可达', async () => {
+    const ctx = { request: async () => { throw { code: 'ENOTFOUND' } } }
+    assert.equal(await checkConnectivity(ctx, options), false)
+  })
+
+  it('4xx 之类的响应异常仍然算可达', async () => {
+    const ctx = { request: async () => { throw { response: { status: 403 } } } }
+    assert.equal(await checkConnectivity(ctx, options), true)
+  })
+
+  it('使用区域与自定义网址拼出探测地址', async () => {
+    const calls = []
+    const ctx = { request: async (requestOptions) => { calls.push(requestOptions); return {} } }
+    await checkConnectivity(ctx, { ...options, customUrl: 'qingstor.example.com' })
+    assert.equal(calls[0].method, 'HEAD')
+    assert.equal(calls[0].url, 'https://pek3b.qingstor.example.com/bkt')
   })
 })
 
@@ -152,12 +203,12 @@ describe('uploadOptions', () => {
   it('按区域拼出上传地址', () => {
     const request = build()
     assert.equal(request.method, 'PUT')
-    assert.equal(request.url, 'https://pek3b.qingstor.com/bkt/a.png')
+    assert.equal(request.url, 'https://pek3b.qsstor.com/bkt/a.png')
   })
 
   it('地址包含 bucket、路径与编码后的文件名', () => {
     const request = build({ bucket: 'bucket-1', path: 'blog/' }, 'a b.png', '.png')
-    assert.equal(request.url, 'https://pek3b.qingstor.com/bucket-1/blog/a%20b.png')
+    assert.equal(request.url, 'https://pek3b.qsstor.com/bucket-1/blog/a%20b.png')
   })
 
   it('跟随自定义域名与协议', () => {
@@ -208,6 +259,29 @@ describe('validateOptions', () => {
 
   it('空配置返回 accessKeyId 相关的错误码', () => {
     assert.equal(validateOptions({}), 'missing_access_key_id')
+  })
+})
+
+describe('config', () => {
+  const build = (userConfig) => config({ getConfig: () => userConfig })
+  const field = (fields, name) => fields.find((item) => item.name === name)
+
+  it('区域是自由输入，默认回填已存值', () => {
+    const zone = field(build({ zone: 'my-zone' }), 'zone')
+    assert.equal(zone.type, 'input')
+    assert.equal(zone.default, 'my-zone')
+    assert.equal(zone.required, true)
+  })
+
+  it('全新安装默认区域为空字符串', () => {
+    assert.equal(field(build(undefined), 'zone').default, '')
+  })
+
+  it('每个字段都带有 alias 与 tips', () => {
+    for (const item of build({})) {
+      assert.ok(item.alias, `${item.name} 缺少 alias`)
+      assert.ok(item.tips, `${item.name} 缺少 tips`)
+    }
   })
 })
 
@@ -283,9 +357,35 @@ describe('plugin', () => {
     await uploader.handle(ctx)
 
     assert.equal(requests.length, 1)
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/a.png')
     assert.equal(output[0].buffer, undefined)
     assert.equal(output[0].base64Image, undefined)
+  })
+
+  it('同时写入剪贴板地址 url', async () => {
+    const output = [{ fileName: 'a.png', extname: '.png', buffer: image }]
+    const { ctx, uploader } = createCtx(options, output)
+    await uploader.handle(ctx)
+
+    assert.equal(output[0].url, 'https://bkt.pek3b.qsstor.com/a.png')
+  })
+
+  it('图片既无 buffer 也无 base64 时给出提示', async () => {
+    const output = [{ fileName: 'a.png', extname: '.png' }]
+    const { ctx, notifications, uploader } = createCtx(options, output)
+    await uploader.handle(ctx)
+
+    assert.equal(output[0].imgUrl, undefined)
+    assert.equal(notifications[0].body, '图片内容为空，无法上传')
+  })
+
+  it('非预设区域直接按 zone 值拼接地址', async () => {
+    const output = [{ fileName: 'a.png', extname: '.png', buffer: image }]
+    const { ctx, requests, uploader } = createCtx({ ...options, zone: 'my-zone' }, output)
+    await uploader.handle(ctx)
+
+    assert.equal(requests[0].url, 'https://my-zone.qsstor.com/bkt/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.my-zone.qsstor.com/a.png')
   })
 
   it('地址与上传地址使用同一套编码与路径', async () => {
@@ -293,8 +393,8 @@ describe('plugin', () => {
     const { ctx, requests, uploader } = createCtx({ ...options, path: 'blog/' }, output)
     await uploader.handle(ctx)
 
-    assert.equal(requests[0].url, 'https://pek3b.qingstor.com/bkt/blog/a%20b.png')
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/blog/a%20b.png')
+    assert.equal(requests[0].url, 'https://pek3b.qsstor.com/bkt/blog/a%20b.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/blog/a%20b.png')
   })
 
   it('没有配置时提示找不到配置文件', async () => {
@@ -365,8 +465,53 @@ describe('plugin', () => {
     }
     await uploader.handle(ctx)
 
-    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/a.png')
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qsstor.com/a.png')
     assert.equal(output[1].imgUrl, undefined)
     assert.equal(notifications[0].body, '访问的 bucket 不存在')
+  })
+})
+
+describe('guiMenu', () => {
+  const run = async (config, request) => {
+    const boxes = []
+    const { ctx, guiMenu } = createCtx(config)
+    if (request) ctx.request = request
+    const item = guiMenu(ctx)[0]
+    await item.handle(ctx, {
+      showMessageBox: async (options) => {
+        boxes.push(options)
+        return { result: 0, checkboxChecked: false }
+      }
+    })
+    return boxes
+  }
+
+  it('在插件菜单里提供配置检查入口', () => {
+    const { ctx, guiMenu } = createCtx(options)
+    assert.equal(guiMenu(ctx)[0].label, '检查配置与连接')
+  })
+
+  it('未配置时提示先完成配置', async () => {
+    const boxes = await run(undefined)
+    assert.equal(boxes[0].type, 'warning')
+    assert.match(boxes[0].message, /还没有配置/)
+  })
+
+  it('必填项缺失时提示缺失的字段', async () => {
+    const boxes = await run({ ...options, bucket: '' })
+    assert.equal(boxes[0].type, 'error')
+    assert.equal(boxes[0].message, '请先配置 Bucket 名称')
+  })
+
+  it('配置完整且可连接时提示成功', async () => {
+    const boxes = await run(options)
+    assert.equal(boxes[0].type, 'info')
+    assert.equal(boxes[0].message, '配置完整，已成功连接青云服务')
+  })
+
+  it('配置完整但网络不可达时给出警告', async () => {
+    const boxes = await run(options, async () => { throw { code: 'ENOTFOUND' } })
+    assert.equal(boxes[0].type, 'warning')
+    assert.equal(boxes[0].message, '配置完整，但无法连接青云服务，请检查区域(zone)、自定义网址和网络')
   })
 })
