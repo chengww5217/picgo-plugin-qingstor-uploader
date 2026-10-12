@@ -2,7 +2,7 @@
 
 [![Downloads](https://img.shields.io/npm/dm/picgo-plugin-qingstor-uploader.svg?color=brightgreen)](https://npmcharts.com/compare/picgo-plugin-qingstor-uploader?minimal=true) [![Version](https://img.shields.io/npm/v/picgo-plugin-qingstor-uploader.svg?color=brightgreen)](https://www.npmjs.com/package/picgo-plugin-qingstor-uploader) [![License](https://img.shields.io/badge/license-mit-brightgreen.svg)](https://github.com/chengww5217/picgo-plugin-qingstor-uploader/blob/master/License)
 
-English | [简体中文](./README-zh_CN.md)
+English | [简体中文](https://github.com/chengww5217/picgo-plugin-qingstor-uploader/blob/master/README-zh_CN.md)
 
 A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](https://www.qingcloud.com/products/objectstorage/), QingCloud's object storage: upload images to your bucket and get the download URL.
 

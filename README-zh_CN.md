@@ -2,7 +2,7 @@
 
 [![下载](https://img.shields.io/npm/dm/picgo-plugin-qingstor-uploader.svg?color=brightgreen)](https://npmcharts.com/compare/picgo-plugin-qingstor-uploader?minimal=true) [![版本](https://img.shields.io/npm/v/picgo-plugin-qingstor-uploader.svg?color=brightgreen)](https://www.npmjs.com/package/picgo-plugin-qingstor-uploader) [![许可](https://img.shields.io/badge/license-mit-brightgreen.svg)](https://github.com/chengww5217/picgo-plugin-qingstor-uploader/blob/master/License)
 
-[English](./README.md) | 简体中文
+[English](https://github.com/chengww5217/picgo-plugin-qingstor-uploader/blob/master/README.md) | 简体中文
 
 为 [PicGo](https://github.com/Molunerfinn/PicGo) 提供[青云 QingStor](https://www.qingcloud.com/products/objectstorage/)（青云对象存储）图床支持的插件，把图片上传到 Bucket 并返回下载地址。
 
