@@ -33,7 +33,7 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 |:--:|:--:|:--:|:--:|
 |accessKeyId|input|AccessKeyId, create/copy it from the QingCloud console "API Keys" page|true|
 |accessKeySecret|password|Paired with AccessKeyId, keep it secret|true|
-|bucket|input|Bucket name. Create it first; only lowercase letters, digits and hyphens (-) are allowed|true|
+|bucket|input|Bucket name. Create it in the QingCloud console first; only lowercase letters, digits and hyphens (-) are allowed|true|
 |zone|input|Zone id, e.g. `pek3b`. Common QingCloud zones: `pek3a`、`pek3b`、`sh1a`、`gd2`. For private cloud or other regions, type the actual value|true|
 |path|input|Storage path inside the bucket, leave empty for the root directory|false|
 |endpoint|input|Object storage endpoint. Default `https://qingstor.com`; `https://qsstor.com` is also supported; private cloud can enter its own address|true|

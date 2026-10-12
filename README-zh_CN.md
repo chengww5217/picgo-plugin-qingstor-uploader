@@ -32,7 +32,7 @@
 |:--:|:--:|:--:|:--:|
 |accessKeyId|input|AccessKeyId，在青云控制台「API 密钥」页面创建并获取|true|
 |accessKeySecret|password|与 AccessKeyId 配对使用，请妥善保管，不要泄露|true|
-|bucket|input|Bucket 名称，需要提前创建，名称只支持小写字母、数字和中划线（-）|true|
+|bucket|input|Bucket 名称，请先在青云控制台创建；名称只支持小写字母、数字和中划线（-）|true|
 |zone|input|区域代码，例如 `pek3b`。青云公有云常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请直接填写实际值|true|
 |path|input|上传时默认存储路径，留空表示根目录|false|
 |endpoint|input|对象存储域名，默认 `https://qingstor.com`，也可用 `https://qsstor.com`；私有云可填写自定义地址|true|

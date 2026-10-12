@@ -95,11 +95,11 @@ const UI: Record<string, LocaleTexts> = {
     ko: 'AccessKeyId와 함께 사용됩니다. 안전하게 보관하세요',
   },
   QINGSTOR_TIPS_BUCKET: {
-    'zh-CN': 'Bucket 需要提前创建，名称只支持小写字母、数字和中划线（-）',
-    'zh-TW': 'Bucket 需事先建立，名稱僅支援小寫字母、數字與連字號（-）',
-    en: 'The bucket must already exist. Its name allows only lowercase letters, digits and hyphens (-).',
-    ja: 'Bucket は事前に作成してください。名前は小文字・数字・ハイフン（-）のみ使用できます',
-    ko: 'Bucket은 미리 생성해야 하며, 이름은 소문자·숫자·하이픈(-)만 사용할 수 있습니다',
+    'zh-CN': '请先在青云控制台创建 Bucket；名称只支持小写字母、数字和中划线（-）',
+    'zh-TW': '請先在青雲控制台建立 Bucket；名稱僅支援小寫字母、數字與連字號（-）',
+    en: 'Create the bucket in the QingCloud console first; its name allows only lowercase letters, digits and hyphens (-).',
+    ja: '先に青雲コンソールで Bucket を作成してください。名前は小文字・数字・ハイフン（-）のみ使用できます',
+    ko: '먼저 QingCloud 콘솔에서 Bucket을 생성하세요. 이름은 소문자·숫자·하이픈(-)만 사용할 수 있습니다',
   },
   QINGSTOR_TIPS_ZONE: {
     'zh-CN': '青云公有云常见区域：pek3a、pek3b、sh1a、gd2；私有云或其他区域请填写实际区域',
