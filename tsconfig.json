@@ -1,13 +1,18 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "rootDir": "./src",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": false,
     "target": "es2017",
     "declaration": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
     "outDir": "dist",
     // It's shit.
     // "baseUrl": "src",

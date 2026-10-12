@@ -1,7 +1,6 @@
 import {Host, Options, Protocol, QingStorError} from '../typings'
 import crypto from 'crypto'
-import request from 'request-promise-native'
-import {IReqOptionsWithBodyResOnly, PicGo} from 'picgo'
+import {IReqOptionsWithBodyResOnly, IPicGo} from 'picgo'
 import { ERRORS } from './error'
 
 const UserAgent = 'picgo_plugin_qingstor';
@@ -15,10 +14,10 @@ const UserAgent = 'picgo_plugin_qingstor';
  */
 export function generateSignature (options: Options, fileName: string, extname: string): string {
   const date = new Date().toUTCString()
-  const path = generatePath(options.path)
+  const path = generatePath(options.path ?? '')
   const strToSign = `PUT\n\n${_getContentType(extname)}\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
-  const signature = crypto.createHmac('sha256', options.accessKeySecret).update(strToSign).digest('base64')
+  const signature = crypto.createHmac('sha256', options.accessKeySecret ?? '').update(strToSign).digest('base64')
   return `QS ${options.accessKeyId}:${signature}`
 }
 
@@ -64,7 +63,7 @@ export function getHost (customUrl: string): Host {
   return { protocol, host }
 }
 
-const imageMime = {
+const imageMime: Record<string, string> = {
   gif: 'image/gif',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -87,11 +86,11 @@ function _getContentType(extname: string): string {
  * @param signature {string} The signature for upload.
  * @param image {Buffer} The image file's buffer.
  * @param extname {string} ext name.
- * @return {typeof request} The request info.
+ * @return {IReqOptionsWithBodyResOnly} The request info.
  */
 export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer, extname: string): IReqOptionsWithBodyResOnly {
-  const url = getHost(options.customUrl)
-  let path = generatePath(options.path)
+  const url = getHost(options.customUrl ?? '')
+  let path = generatePath(options.path ?? '')
   return {
     method: 'PUT',
     url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path}/${encodeURI(fileName)}`,
@@ -108,26 +107,23 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 
 /**
  * Handle the request error and notify the user with the message.
- * @param ctx {PicGo} The context to show the notification.
+ * @param ctx {IPicGo} The context to show the notification.
  * @param err {QingStorError} The request error.
  */
-export function handleError (ctx: PicGo, err: QingStorError) {
+export function handleError (ctx: IPicGo, err: QingStorError) {
   ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
   let message: string
   try {
     let error = err.error
     const type = typeof error
-    let code: string
+    let code: string | undefined
     if (type === 'string') {
       error = JSON.parse(error as string)
     }
     code = (error as QingStorError)?.code ?? (error as QingStorError)?.response?.body?.code
     if (!code) code = err?.code ?? err?.response?.body?.code
     if (code) {
-      message = ERRORS[code]
-      if (!message) {
-        message = code
-      }
+      message = ERRORS[code] || code
     } else {
       message = '请检查配置项或网络情况'
     }

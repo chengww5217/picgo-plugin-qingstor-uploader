@@ -4,7 +4,7 @@ import { QingStorError } from '../typings'
  * All errors of qingstor server returns.
  * Format into Chinese strings.
  */
-export const ERRORS = {
+export const ERRORS: Record<string, string> = {
   'invalid_access_key_id': 'access key 不正确',
   'invalid_range': '请求头 Range 不符合规则',
   'request_expired': '请检查本地时间是否正确',
