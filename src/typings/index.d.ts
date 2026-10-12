@@ -13,7 +13,7 @@ export interface Options {
 }
 
 /** Languages PicGo ships with. */
-export type Language = 'zh-CN' | 'zh-TW' | 'en'
+export type Language = 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko'
 
 /** One user facing text, translated for every supported language. */
 export type LocaleTexts = Record<Language, string>

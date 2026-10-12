@@ -16,6 +16,7 @@ const {
   resolveHost,
 } = require('../dist/utils/index.js')
 const { config } = require('../dist/utils/config.js')
+const { registerLocales } = require('../dist/i18n/index.js')
 const plugin = require('../dist/index.js')
 
 const options = {
@@ -684,7 +685,44 @@ describe('guiMenu', () => {
       throw { code: 'ENOTFOUND' }
     })
     assert.equal(boxes[0].type, 'warning')
-    assert.equal(boxes[0].message, '配置完整，但无法连接青云服务，请检查区域(zone)、自定义网址和网络')
+    assert.equal(boxes[0].message, '配置完整，但无法连接青云服务，请检查区域(zone)、对象存储域名和网络')
+  })
+})
+
+describe('i18n', () => {
+  const captured = {}
+  registerLocales({
+    i18n: {
+      addLocale: (language, locales) => {
+        captured[language] = locales
+        return true
+      },
+    },
+  })
+
+  it('注册 zh-CN / zh-TW / en / ja / ko 五种语言', () => {
+    assert.deepEqual(Object.keys(captured).sort(), ['en', 'ja', 'ko', 'zh-CN', 'zh-TW'])
+  })
+
+  it('每种语言都包含配置文案与错误文案', () => {
+    for (const language of Object.keys(captured)) {
+      const locales = captured[language]
+      assert.ok(locales.QINGSTOR_ALIAS_BUCKET, `${language} 缺少配置文案`)
+      assert.ok(locales.QINGSTOR_TIPS_ENDPOINT, `${language} 缺少 endpoint 提示`)
+      assert.ok(locales.QINGSTOR_ERR_PERMISSION_DENIED, `${language} 缺少错误码文案`)
+      assert.ok(locales.QINGSTOR_NET_ECONNABORTED, `${language} 缺少网络错误文案`)
+    }
+  })
+
+  it('韩语/日语不是中文（确实有翻译）', () => {
+    assert.notEqual(captured.ja.QINGSTOR_ALIAS_ZONE, captured['zh-CN'].QINGSTOR_ALIAS_ZONE)
+    assert.notEqual(captured.ko.QINGSTOR_ALIAS_ZONE, captured['zh-CN'].QINGSTOR_ALIAS_ZONE)
+    assert.notEqual(captured.ja.QINGSTOR_ERR_PERMISSION_DENIED, '没有权限执行此次请求')
+    assert.notEqual(captured.ko.QINGSTOR_ERR_PERMISSION_DENIED, '没有权限执行此次请求')
+  })
+
+  it('缺少 i18n 时 registerLocales 直接返回', () => {
+    assert.equal(registerLocales({}), undefined)
   })
 })
 

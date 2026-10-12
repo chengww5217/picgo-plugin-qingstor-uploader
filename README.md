@@ -39,7 +39,7 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 |endpoint|input|Object storage endpoint. Default `https://qingstor.com`; `https://qsstor.com` is also supported; private cloud can enter its own address|true|
 |deleteRemote|confirm|Delete the matching object from QingStor when an image is removed from the album|false|
 
-In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en). You can verify the config and the connection from the plugin menu ("Check config & connection").
+In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en / ja / ko). You can verify the config and the connection from the plugin menu ("Check config & connection").
 
 The endpoint defaults to the official QingCloud one: `https://<bucket>.<zone>.qingstor.com` (`https://qingstor.com`). `https://qsstor.com` is also supported; for private cloud, set the Endpoint field to your own address.
 
