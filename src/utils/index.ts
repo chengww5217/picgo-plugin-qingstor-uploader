@@ -1,4 +1,4 @@
-import {Host, Options, Protocol, QingStorError} from '../typings'
+import {Host, Options, Protocol, QingStorError, SignatureInfo} from '../typings'
 import crypto from 'crypto'
 import {IReqOptionsWithBodyResOnly, IPicGo} from 'picgo'
 import { ERRORS } from './error'
@@ -10,15 +10,15 @@ const UserAgent = 'picgo_plugin_qingstor';
  * @param options {Options} PicGo options, AKA infos user entered.
  * @param fileName {string} The upload image's name, AKA object key in oss.
  * @param extname {string} extname for Content-Type in request headers.
- * @return {string} The generated signature.
+ * @return {SignatureInfo} The signature, and the date it was signed for.
  */
-export function generateSignature (options: Options, fileName: string, extname: string): string {
+export function generateSignature (options: Options, fileName: string, extname: string): SignatureInfo {
   const date = new Date().toUTCString()
   const path = generatePath(options.path ?? '')
   const strToSign = `PUT\n\n${_getContentType(extname)}\n${date}\n/${options.bucket}${path}/${encodeURI(fileName)}`
 
   const signature = crypto.createHmac('sha256', options.accessKeySecret ?? '').update(strToSign).digest('base64')
-  return `QS ${options.accessKeyId}:${signature}`
+  return { signature: `QS ${options.accessKeyId}:${signature}`, date }
 }
 
 /**
@@ -86,18 +86,19 @@ function _getContentType(extname: string): string {
  * @param signature {string} The signature for upload.
  * @param image {Buffer} The image file's buffer.
  * @param extname {string} ext name.
+ * @param date {string} The date the signature was computed for.
  * @return {IReqOptionsWithBodyResOnly} The request info.
  */
-export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer, extname: string): IReqOptionsWithBodyResOnly {
+export function uploadOptions (options: Options, fileName: string, signature: string, image: Buffer, extname: string, date: string): IReqOptionsWithBodyResOnly {
   const url = getHost(options.customUrl ?? '')
-  let path = generatePath(options.path ?? '')
+  const path = generatePath(options.path ?? '')
   return {
     method: 'PUT',
     url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path}/${encodeURI(fileName)}`,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
-      Date: new Date().toUTCString(),
+      Date: date,
       'User-Agent': UserAgent,
       'Content-Type': _getContentType(extname),
     },

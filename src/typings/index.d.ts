@@ -14,6 +14,17 @@ export interface Host {
   host: string
 }
 
+export interface SignatureInfo {
+  /** The value of the Authorization header. */
+  signature: string,
+  /**
+   * The date used to compute the signature.
+   * It MUST be sent as the request's Date header as well,
+   * otherwise QingStor rejects the request with signature_not_matched.
+   */
+  date: string
+}
+
 export interface QingStorError {
   error?: string;
   code?: string;

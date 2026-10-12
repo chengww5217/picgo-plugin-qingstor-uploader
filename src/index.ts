@@ -17,10 +17,10 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
     for (let i in imgList) {
       if (!imgList.hasOwnProperty(i)) continue
       const { fileName = '', extname = '' } = imgList[i]
-      const signature = generateSignature(qingstorOptions, fileName, extname)
+      const { signature, date } = generateSignature(qingstorOptions, fileName, extname)
       const image = imgList[i].buffer ?? (imgList[i].base64Image ? Buffer.from(imgList[i].base64Image as string, 'base64') : undefined)
       if (!image) continue
-      const options = uploadOptions(qingstorOptions, fileName, signature, image, extname)
+      const options = uploadOptions(qingstorOptions, fileName, signature, image, extname, date)
       await ctx.request(options)
       delete imgList[i].base64Image
       delete imgList[i].buffer
