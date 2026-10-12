@@ -1,9 +1,11 @@
 import {Host, Options, Protocol, QingStorError, SignatureInfo} from '../typings'
 import crypto from 'crypto'
 import {IReqOptionsWithBodyResOnly, IPicGo} from 'picgo'
-import { ERRORS } from './error'
+import { ERRORS, NETWORK_ERRORS } from './error'
 
 const UserAgent = 'picgo_plugin_qingstor';
+/** Timeout of the upload request, in milliseconds. */
+const UPLOAD_TIMEOUT = 30000;
 
 /**
  * Generate signature of qingstor.
@@ -95,6 +97,7 @@ export function uploadOptions (options: Options, fileName: string, signature: st
   return {
     method: 'PUT',
     url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path}/${encodeURI(fileName)}`,
+    timeout: UPLOAD_TIMEOUT,
     headers: {
       Host: `${options.zone}.${url.host}`,
       Authorization: signature,
@@ -129,7 +132,7 @@ function getErrorMessage (err: QingStorError): string {
     err?.code ??
     err?.response?.body?.code
   if (!code) return fallback
-  return ERRORS[code] || code
+  return ERRORS[code] || NETWORK_ERRORS[code] || code
 }
 
 /**

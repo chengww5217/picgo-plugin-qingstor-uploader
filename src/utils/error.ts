@@ -44,6 +44,19 @@ export const ERRORS: Record<string, string> = {
   'service_unavailable': '对象存储系统临时不可用'
 }
 
+/**
+ * Errors thrown by the client (not by QingStor), e.g. network problems and
+ * the request timeout set by the plugin. Mapped to Chinese strings as well.
+ */
+export const NETWORK_ERRORS: Record<string, string> = {
+  'ECONNABORTED': '上传超时，请检查网络后重试',
+  'ETIMEDOUT': '上传超时，请检查网络后重试',
+  'ENOTFOUND': '无法连接到青云服务，请检查区域(zone)和自定义网址是否正确',
+  'ECONNREFUSED': '无法连接到青云服务，请检查网络或自定义网址',
+  'ECONNRESET': '连接被重置，请稍后重试',
+  'ERR_CANCELED': '上传已取消'
+}
+
 export const CONFIG_NOT_FOUND_ERROR: QingStorError = {
   code: 'config_not_found'
 }
