@@ -20,7 +20,7 @@
     "build": "tsc -p .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.js\"",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm run format:check && npm test"
   },
   "keywords": [
     "picgo",

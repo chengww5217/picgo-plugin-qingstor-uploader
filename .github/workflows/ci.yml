@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - name: 类型检查与编译
         run: npm run build
+      - name: 检查代码格式
+        run: npm run format:check
       - name: 单元测试
         run: npm test
       - name: 检查发布产物（dist 是否齐全、src/test 是否被排除）
