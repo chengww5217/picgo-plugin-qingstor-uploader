@@ -20,16 +20,21 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
     const customUrl = qingstorOptions.customUrl ?? ''
     const path = generatePath(qingstorOptions.path ?? '')
     const url = getHost(customUrl)
-    for (const img of imgList) {
+    // Upload in parallel: a batch of images shouldn't have to wait one by one.
+    const results = await Promise.allSettled(imgList.map(async (img) => {
       const { fileName = '', extname = '' } = img
       const { signature, date } = generateSignature(qingstorOptions, fileName, extname)
       const image = img.buffer ?? (img.base64Image ? Buffer.from(img.base64Image, 'base64') : undefined)
-      if (!image) continue
+      if (!image) return
       const options = uploadOptions(qingstorOptions, fileName, signature, image, extname, date)
       await ctx.request(options)
       delete img.base64Image
       delete img.buffer
       img.imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${encodeURI(fileName)}`
+    }))
+    const failure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected')
+    if (failure) {
+      handleError(ctx, failure.reason as QingStorError)
     }
     return ctx
   } catch (err) {

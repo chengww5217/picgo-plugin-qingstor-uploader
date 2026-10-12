@@ -334,4 +334,39 @@ describe('plugin', () => {
       assert.equal(request.headers.Authorization, signAsQingStor(request.headers.Date, { fileName: output[index].fileName }))
     }
   })
+
+  it('并发上传多张图片，不互相等待', async () => {
+    const output = [
+      { fileName: 'a.png', extname: '.png', buffer: image },
+      { fileName: 'b.png', extname: '.png', buffer: image }
+    ]
+    const { ctx, uploader } = createCtx(options, output)
+    const pending = []
+    ctx.request = () => new Promise((resolve) => { pending.push(resolve) })
+
+    const handled = uploader.handle(ctx)
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(pending.length, 2, '两个请求应当同时发出')
+
+    pending.forEach((resolve) => resolve())
+    await handled
+  })
+
+  it('部分图片失败时，成功的图片仍然写入地址，失败的给出提示', async () => {
+    const output = [
+      { fileName: 'a.png', extname: '.png', buffer: image },
+      { fileName: 'b.png', extname: '.png', buffer: image }
+    ]
+    const { ctx, notifications, uploader } = createCtx(options, output)
+    ctx.request = async (requestOptions) => {
+      if (requestOptions.url.includes('b.png')) {
+        throw { response: { body: { code: 'bucket_not_exists' } } }
+      }
+    }
+    await uploader.handle(ctx)
+
+    assert.equal(output[0].imgUrl, 'https://bkt.pek3b.qingstor.com/a.png')
+    assert.equal(output[1].imgUrl, undefined)
+    assert.equal(notifications[0].body, '访问的 bucket 不存在')
+  })
 })
