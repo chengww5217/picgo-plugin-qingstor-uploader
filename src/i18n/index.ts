@@ -166,6 +166,20 @@ const UI: Record<string, LocaleTexts> = {
     ja: 'オブジェクトも同時に削除',
     ko: '오브젝트 동시 삭제',
   },
+  QINGSTOR_CONFIRM_ON: {
+    'zh-CN': '开启',
+    'zh-TW': '開啟',
+    en: 'On',
+    ja: 'オン',
+    ko: '켜기',
+  },
+  QINGSTOR_CONFIRM_OFF: {
+    'zh-CN': '关闭',
+    'zh-TW': '關閉',
+    en: 'Off',
+    ja: 'オフ',
+    ko: '끄기',
+  },
   QINGSTOR_MSG_DELETE_REMOTE: {
     'zh-CN': '删除相册图片时，是否同步删除对象存储中的对象？',
     'zh-TW': '刪除相簿圖片時，是否同步刪除物件儲存中的物件？',

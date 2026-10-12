@@ -433,6 +433,12 @@ describe('config', () => {
     assert.equal(field(build({ deleteRemote: true }), 'deleteRemote').default, true)
   })
 
+  it('开关的开启/关闭文案可本地化', () => {
+    const off = field(build(undefined), 'deleteRemote')
+    assert.equal(off.confirmText, '开启')
+    assert.equal(off.cancelText, '关闭')
+  })
+
   it('每个字段都带有 alias 与 tips', () => {
     for (const item of build({})) {
       assert.ok(item.alias, `${item.name} 缺少 alias`)

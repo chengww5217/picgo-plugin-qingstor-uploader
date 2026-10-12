@@ -66,6 +66,8 @@ export const config = (ctx: IPicGo): IPluginConfig[] => {
       type: 'confirm',
       alias: translate(ctx, 'QINGSTOR_ALIAS_DELETE_REMOTE'),
       message: translate(ctx, 'QINGSTOR_MSG_DELETE_REMOTE'),
+      confirmText: translate(ctx, 'QINGSTOR_CONFIRM_ON'),
+      cancelText: translate(ctx, 'QINGSTOR_CONFIRM_OFF'),
       tips: translate(ctx, 'QINGSTOR_TIPS_DELETE_REMOTE'),
       default: userConfig.deleteRemote === true,
       required: false,
