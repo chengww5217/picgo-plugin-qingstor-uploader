@@ -107,32 +107,40 @@ export function uploadOptions (options: Options, fileName: string, signature: st
 }
 
 /**
+ * Resolve a human readable message from the error.
+ * Both a QingStor error code and a plain text message are supported.
+ * @param err {QingStorError} The request error.
+ * @return {string} The message to show to the user.
+ */
+function getErrorMessage (err: QingStorError): string {
+  const fallback = '请检查配置项或网络情况'
+  const raw = err?.error
+  let error: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      error = JSON.parse(raw)
+    } catch {
+      // Not a JSON string, the plugin itself passes plain text messages.
+      return raw
+    }
+  }
+  const code = (error as QingStorError)?.code ??
+    (error as QingStorError)?.response?.body?.code ??
+    err?.code ??
+    err?.response?.body?.code
+  if (!code) return fallback
+  return ERRORS[code] || code
+}
+
+/**
  * Handle the request error and notify the user with the message.
  * @param ctx {IPicGo} The context to show the notification.
  * @param err {QingStorError} The request error.
  */
 export function handleError (ctx: IPicGo, err: QingStorError) {
   ctx.log.error('Qingstor uploader error: ', JSON.stringify(err))
-  let message: string
-  try {
-    let error = err.error
-    const type = typeof error
-    let code: string | undefined
-    if (type === 'string') {
-      error = JSON.parse(error as string)
-    }
-    code = (error as QingStorError)?.code ?? (error as QingStorError)?.response?.body?.code
-    if (!code) code = err?.code ?? err?.response?.body?.code
-    if (code) {
-      message = ERRORS[code] || code
-    } else {
-      message = '请检查配置项或网络情况'
-    }
-  } catch {
-    message = '请检查配置项或网络情况'
-  }
   ctx.emit('notification', {
     title: '上传失败！',
-    body: message
+    body: getErrorMessage(err)
   })
 }

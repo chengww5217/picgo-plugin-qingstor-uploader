@@ -5,6 +5,7 @@ import { QingStorError } from '../typings'
  * Format into Chinese strings.
  */
 export const ERRORS: Record<string, string> = {
+  'config_not_found': '找不到青云 QingStor 图床配置文件',
   'invalid_access_key_id': 'access key 不正确',
   'invalid_range': '请求头 Range 不符合规则',
   'request_expired': '请检查本地时间是否正确',
@@ -44,5 +45,5 @@ export const ERRORS: Record<string, string> = {
 }
 
 export const CONFIG_NOT_FOUND_ERROR: QingStorError = {
-  error: '{code: "找不到青云 QingStor 图床配置文件"}'
+  code: 'config_not_found'
 }
