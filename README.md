@@ -6,22 +6,31 @@
 
 English | [简体中文](./README-zh_CN.md)
 
-A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of the [QingStor](https://www.qingcloud.com/products/objectstorage/) image hosting.
+A [PicGo](https://github.com/Molunerfinn/PicGo) uploader plugin for [QingStor](https://www.qingcloud.com/products/objectstorage/), QingCloud's object storage.
+
+### Features
+
+- Upload images to a QingStor bucket.
+- Localized config form and notifications: zh-CN / zh-TW / en / ja / ko.
+- **Check config & connection** in the plugin menu, to validate the config and test reachability.
+- Optional **sync delete**: deleting an image from the PicGo album also deletes the matching object.
 
 ### Installation
 
-- Online Installation
+**Online**
 
-  1. Open the details window of [PicGo](https://github.com/Molunerfinn/PicGo), select **Plugin Settings**, and search **qingstor-uploader** for installation.
-  2. Then restart the application.
+1. Open PicGo, go to **Plugin Settings**, search **qingstor-uploader** and install it.
+2. Restart PicGo.
 
-- Offline Installation
+**Offline**
 
-  1. Clone the repository
-  2. Open the details window of [PicGo](https://github.com/Molunerfinn/PicGo), select **Plugin Settings**, and click the icon below.
-  ![](screenshots/picgo-offline-install.png)
-  3. Select the folder you cloned the repository to.
-  4. Restart the application.
+1. Clone this repository.
+2. Open PicGo, go to **Plugin Settings** and click the offline-install icon below.
+
+   ![](screenshots/picgo-offline-install.png)
+
+3. Select the folder you cloned.
+4. Restart PicGo.
 
 ### Screenshots
 
@@ -29,21 +38,22 @@ A plugin for [PicGo](https://github.com/Molunerfinn/PicGo) with the addition of 
 
 ### Configuration
 
-|Parameter Name|Type|Description|Required|
+|Key|Type|Description|Required|
 |:--:|:--:|:--:|:--:|
-|accessKeyId|input|AccessKeyId, create/copy it from the QingCloud console "API Keys" page|true|
-|accessKeySecret|password|Paired with AccessKeyId, keep it secret|true|
-|bucket|input|Bucket name. Create it in the QingCloud console first; only lowercase letters, digits and hyphens (-) are allowed|true|
-|zone|input|Zone id, e.g. `pek3b`. Common QingCloud zones: `pek3a`、`pek3b`、`sh1a`、`gd2`. For private cloud or other regions, type the actual value|true|
-|path|input|Storage path inside the bucket, leave empty for the root directory|false|
-|endpoint|input|Object storage endpoint. Default `https://qingstor.com`; `https://qsstor.com` is also supported; private cloud can enter its own address|true|
-|deleteRemote|confirm|Delete the matching object from QingStor when an image is removed from the album|false|
+|accessKeyId|input|QingCloud API key ID. Create and copy it from the console's **API Keys** page|yes|
+|accessKeySecret|password|Paired with AccessKeyId. Keep it secret|yes|
+|bucket|input|Bucket name. Create it in the QingCloud console first. Only lowercase letters, digits and hyphens (-) are allowed|yes|
+|zone|input|Zone id, e.g. `pek3b`. Common zones: `pek3a`, `pek3b`, `sh1a`, `gd2`. For private cloud or other regions, enter the actual value|yes|
+|path|input|Path inside the bucket to store files under. Leave empty for the bucket root|no|
+|endpoint|input|Endpoint domain. Default `https://qingstor.com`; `https://qsstor.com` is also supported; for private cloud, enter your own address|yes|
+|deleteRemote|confirm|When on, deleting an image from the PicGo album also deletes the object from QingStor|no|
 
-In the PicGo app, each field also has a localized label and a tooltip (zh-CN / zh-TW / en / ja / ko). You can verify the config and the connection from the plugin menu ("Check config & connection").
-
-The endpoint defaults to the official QingCloud one: `https://<bucket>.<zone>.qingstor.com` (`https://qingstor.com`). `https://qsstor.com` is also supported; for private cloud, set the Endpoint field to your own address.
+The config form is localized (zh-CN / zh-TW / en / ja / ko); the table above lists the config keys. Uploaded files are served from `https://<bucket>.<zone>.<endpoint>`, by default `https://<bucket>.<zone>.qingstor.com`. Click **Check config & connection** in the plugin menu to validate the config and test connectivity.
 
 ### Sync delete
 
-Turn on the **"Sync delete cloud object"** switch in the plugin settings to also delete the matching object from QingStor whenever you delete an image from the PicGo album. The result is reported with a notification. When the switch is off (the default), deleting from the album only removes the album entry. The object key is derived from the image URL, so it keeps working even after you change the storage path.
+Turn on **Sync delete objects** (`deleteRemote`) in the plugin settings to also delete the matching object whenever you remove an image from the PicGo album. The result is reported with a notification: a single delete shows the file name, multiple deletes show the total. When the switch is off (the default), removing an image only removes the album entry. The object key is derived from the image URL, so it keeps working even after you change `path`.
 
+### License
+
+[MIT](./License)

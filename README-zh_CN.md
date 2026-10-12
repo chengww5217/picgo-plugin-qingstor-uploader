@@ -6,21 +6,31 @@
 
 [English](./README.md) | 简体中文
 
-为 [PicGo](https://github.com/Molunerfinn/PicGo) 开发的一款插件，新增了[青云 QingStor](https://www.qingcloud.com/products/objectstorage/) 图床。
+为 [PicGo](https://github.com/Molunerfinn/PicGo) 开发的一款插件，新增[青云 QingStor](https://www.qingcloud.com/products/objectstorage/)（青云对象存储）图床。
+
+### 特性
+
+- 把图片上传到青云 QingStor 的 Bucket。
+- 配置项与通知均支持多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어。
+- 插件菜单里提供 **「检查配置与连接」**，用于校验配置并测试连通性。
+- 可选的 **同步删除**：从 PicGo 相册删除图片时，一并删除对象存储中的对象。
 
 ### 安装
 
-- 在线安装
+**在线安装**
 
-    打开 [PicGo](https://github.com/Molunerfinn/PicGo) 详细窗口，选择**插件设置**，搜索**qingstor-uploader**安装，然后重启应用即可。
+1. 打开 PicGo，进入 **插件设置**，搜索 **qingstor-uploader** 并安装。
+2. 重启 PicGo。
 
-- 离线安装
+**离线安装**
 
-    1. 克隆该项目
-    2. 打开 [PicGo](https://github.com/Molunerfinn/PicGo) 详细窗口，选择**插件设置**，并点击如下按钮：
-       ![](screenshots/picgo-offline-install.png)
-    3. 选择你克隆仓库的文件夹
-    4. 重启应用即可
+1. 克隆本仓库。
+2. 打开 PicGo，进入 **插件设置**，点击下方的离线安装按钮。
+
+   ![](screenshots/picgo-offline-install.png)
+
+3. 选择你克隆的文件夹。
+4. 重启 PicGo。
 
 ### 截图
 
@@ -28,22 +38,22 @@
 
 ### 配置
 
-|参数名称|类型|描述|是否必须|
+|配置项|类型|说明|必填|
 |:--:|:--:|:--:|:--:|
-|accessKeyId|input|AccessKeyId，在青云控制台「API 密钥」页面创建并获取|true|
-|accessKeySecret|password|与 AccessKeyId 配对使用，请妥善保管，不要泄露|true|
-|bucket|input|Bucket 名称，请先在青云控制台创建；名称只支持小写字母、数字和中划线（-）|true|
-|zone|input|区域代码，例如 `pek3b`。青云公有云常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请直接填写实际值|true|
-|path|input|上传时默认存储路径，留空表示根目录|false|
-|endpoint|input|对象存储域名，默认 `https://qingstor.com`，也可用 `https://qsstor.com`；私有云可填写自定义地址|true|
-|deleteRemote|confirm|删除相册图片时，同步删除对象存储中的对象|false|
+|accessKeyId|input|青云 API 密钥 ID，在控制台 **「API 密钥」** 页面创建并获取|是|
+|accessKeySecret|password|与 AccessKeyId 配对使用，请妥善保管|是|
+|bucket|input|Bucket 名称，请先在青云控制台创建。只支持小写字母、数字和中划线（-）|是|
+|zone|input|区域代码，例如 `pek3b`。常见区域：`pek3a`、`pek3b`、`sh1a`、`gd2`；私有云或其他区域请填写实际值|是|
+|path|input|上传时在 Bucket 内的存储路径，留空表示 Bucket 根目录|否|
+|endpoint|input|对象存储域名。默认 `https://qingstor.com`，也支持 `https://qsstor.com`；私有云请填写自己的地址|是|
+|deleteRemote|confirm|开启后，从相册删除图片时会同步删除对象存储中的对象|否|
 
-在 PicGo 客户端里，每个配置项都带有本地化的标题与提示（简体中文 / 繁體中文 / English / 日本語 / 한국어）。可以在插件菜单里点击「检查配置与连接」来校验配置并测试连通性。
-
-默认使用青云官方 Endpoint：`https://<bucket>.<zone>.qingstor.com`（`https://qingstor.com`）。也支持 `https://qsstor.com`；私有云请把「对象存储域名」填成自己的地址。
+配置表单已本地化（简体中文 / 繁體中文 / English / 日本語 / 한국어），上表列出的是配置键。上传后的地址形如 `https://<bucket>.<zone>.<endpoint>`，默认为 `https://<bucket>.<zone>.qingstor.com`。在插件菜单里点击 **「检查配置与连接」** 可校验配置并测试连通性。
 
 ### 同步删除
 
-在插件设置里打开 **「同步删除云端对象」** 开关后，从 PicGo 相册删除青云 QingStor 的图片时，会同时对对象存储发起 `DELETE` 删除对应对象，并用通知反馈结果。开关默认关闭，此时只删除相册记录。对象 key 由图片地址反推，即使之后修改了存储路径也能删对。
+在插件设置里打开 **「同步删除云端对象」**（`deleteRemote`）后，从 PicGo 相册删除青云 QingStor 的图片时，会一并删除对象存储中的对应对象，并用通知反馈结果：单个删除显示文件名，多个删除显示总数。开关默认关闭，此时只删除相册记录。对象 key 由图片地址反推，即使之后修改了 `path` 也能删对。
 
+### 许可
 
+[MIT](./License)
