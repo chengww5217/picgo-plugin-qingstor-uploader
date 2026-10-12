@@ -8,6 +8,22 @@ const UserAgent = 'picgo_plugin_qingstor';
 const UPLOAD_TIMEOUT = 30000;
 
 /**
+ * Check the user's configuration before uploading.
+ * Required fields are also validated by PicGo's config form, but a config file
+ * edited by hand (or a half-filled one) would otherwise build a request for
+ * an invalid url such as https://.qingstor.com/... and fail with a confusing error.
+ * @param options {Options} PicGo options, AKA infos user entered.
+ * @return {string} The error code, or '' when the configuration is valid.
+ */
+export function validateOptions (options: Options): string {
+  if (!options.accessKeyId) return 'missing_access_key_id'
+  if (!options.accessKeySecret) return 'missing_access_key_secret'
+  if (!options.bucket) return 'missing_bucket'
+  if (!options.zone) return 'missing_zone'
+  return ''
+}
+
+/**
  * Generate signature of qingstor.
  * @param options {Options} PicGo options, AKA infos user entered.
  * @param fileName {string} The upload image's name, AKA object key in oss.

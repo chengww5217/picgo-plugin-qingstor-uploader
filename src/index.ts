@@ -1,5 +1,5 @@
 import { IPicGo } from 'picgo'
-import { generatePath, generateSignature, getHost, handleError, uploadOptions } from './utils'
+import { generatePath, generateSignature, getHost, handleError, uploadOptions, validateOptions } from './utils'
 import { config } from './utils/config'
 import { CONFIG_NOT_FOUND_ERROR } from './utils/error'
 import { Options, QingStorError } from './typings'
@@ -8,6 +8,11 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
   const qingstorOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
   if (!qingstorOptions) {
     handleError(ctx, CONFIG_NOT_FOUND_ERROR)
+    return ctx
+  }
+  const invalidOption = validateOptions(qingstorOptions)
+  if (invalidOption) {
+    handleError(ctx, { code: invalidOption })
     return ctx
   }
   try {

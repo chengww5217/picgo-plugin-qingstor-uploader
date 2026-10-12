@@ -6,6 +6,10 @@ import { QingStorError } from '../typings'
  */
 export const ERRORS: Record<string, string> = {
   'config_not_found': '找不到青云 QingStor 图床配置文件',
+  'missing_access_key_id': '请先配置 AccessKeyId',
+  'missing_access_key_secret': '请先配置 AccessKeySecret',
+  'missing_bucket': '请先配置 Bucket 名称',
+  'missing_zone': '请先配置区域(zone)',
   'invalid_access_key_id': 'access key 不正确',
   'invalid_range': '请求头 Range 不符合规则',
   'request_expired': '请检查本地时间是否正确',
