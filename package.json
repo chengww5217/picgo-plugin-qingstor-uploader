@@ -3,14 +3,23 @@
   "version": "1.2.5",
   "description": "青云对象存储图床; qingstor uploader;",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "homepage": "https://github.com/chengww5217/picgo-plugin-qingstor-uploader",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chengww5217/picgo-plugin-qingstor-uploader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chengww5217/picgo-plugin-qingstor-uploader/issues"
+  },
   "scripts": {
     "test": "npm run build && node --test",
     "build": "tsc -p .",
     "dev": "tsc -w -p .",
+    "prepublishOnly": "npm test",
     "patch": "npm version patch && git push origin master && git push origin --tags",
     "minor": "npm version minor && git push origin master && git push origin --tags",
     "major": "npm version major && git push origin master && git push origin --tags"
