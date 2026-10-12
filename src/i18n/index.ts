@@ -131,7 +131,7 @@ const UI: Record<string, LocaleTexts> = {
     ja: '設定と接続を確認',
     ko: '설정 및 연결 확인',
   },
-  QINGSTOR_CHECK_TITLE: {
+  QINGSTOR_NAME: {
     'zh-CN': '青云 QingStor',
     'zh-TW': '青雲 QingStor',
     en: 'QingStor',

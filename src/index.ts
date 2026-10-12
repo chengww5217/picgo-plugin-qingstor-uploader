@@ -93,7 +93,7 @@ async function syncDelete(ctx: IPicGo, options: Options, files: RemovedImage[]):
   const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
   failures.forEach(result => ctx.log.error('Qingstor delete error: ', JSON.stringify(result.reason)))
   const success = results.length - failures.length
-  const title = translate(ctx, 'QINGSTOR_CHECK_TITLE')
+  const title = translate(ctx, 'QINGSTOR_NAME')
   const body = failures.length
     ? translate(ctx, 'QINGSTOR_DELETE_PARTIAL', { success, failed: failures.length })
     : translate(ctx, 'QINGSTOR_DELETE_SUCCESS', { count: success })
@@ -134,7 +134,7 @@ const guiMenu = (ctx: IPicGo) => {
     {
       label: translate(ctx, 'QINGSTOR_MENU_CHECK_CONFIG'),
       async handle(ctx: IPicGo, guiApi: GuiApi) {
-        const title = translate(ctx, 'QINGSTOR_CHECK_TITLE')
+        const title = translate(ctx, 'QINGSTOR_NAME')
         const rawOptions = ctx.getConfig<Options>('picBed.qingstor-uploader')
         if (!rawOptions) {
           await guiApi.showMessageBox({
@@ -170,7 +170,7 @@ export = (ctx: IPicGo) => {
     registerLocales(ctx)
     ctx.helper.uploader.register('qingstor-uploader', {
       handle,
-      name: '青云 QingStor',
+      name: translate(ctx, 'QINGSTOR_NAME'),
       config,
     })
     // Delete the matching objects when images are removed from the album,

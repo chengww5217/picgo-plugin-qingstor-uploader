@@ -506,6 +506,31 @@ describe('plugin', () => {
     assert.equal(typeof uploader.config, 'function')
   })
 
+  it('图床显示名走 i18n', () => {
+    let name
+    const ctx = {
+      getConfig: () => options,
+      output: [],
+      request: async () => {},
+      log: { error: () => {} },
+      helper: {
+        uploader: {
+          register: (id, handler) => {
+            name = handler.name
+          },
+        },
+      },
+      emit: () => {},
+      on: () => {},
+      i18n: {
+        addLocale: () => true,
+        translate: key => (key === 'QINGSTOR_NAME' ? 'QingStor' : key),
+      },
+    }
+    plugin(ctx).register()
+    assert.equal(name, 'QingStor')
+  })
+
   it('上传成功后写入图片地址并清理内存数据', async () => {
     const output = [{ fileName: 'a.png', extname: '.png', buffer: image, base64Image: 'x' }]
     const { ctx, requests, uploader } = createCtx(options, output)
