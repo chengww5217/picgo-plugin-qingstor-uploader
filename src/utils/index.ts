@@ -45,13 +45,10 @@ export function generateSignature (options: Options, fileName: string, extname: 
  * @return {string} the encoded path.
  */
 export function generatePath (path: string): string {
-  if (path) {
-    if (path.endsWith('/')) {
-      path = path.substring(0, path.length - 1)
-    }
-    path = '/' + encodeURI(path)
-  }
-  return path || ''
+  if (!path) return ''
+  const trimmedPath = path.endsWith('/') ? path.substring(0, path.length - 1) : path
+  if (!trimmedPath) return ''
+  return '/' + encodeURI(trimmedPath)
 }
 
 const QINGSTOR_HOST = 'qingstor.com'
@@ -115,7 +112,6 @@ export function uploadOptions (options: Options, fileName: string, signature: st
     url: `${url.protocol}://${options.zone}.${url.host}/${options.bucket}${path}/${encodeURI(fileName)}`,
     timeout: UPLOAD_TIMEOUT,
     headers: {
-      Host: `${options.zone}.${url.host}`,
       Authorization: signature,
       Date: date,
       'User-Agent': UserAgent,

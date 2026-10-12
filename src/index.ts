@@ -19,18 +19,17 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
     const imgList = ctx.output
     const customUrl = qingstorOptions.customUrl ?? ''
     const path = generatePath(qingstorOptions.path ?? '')
-    for (let i in imgList) {
-      if (!imgList.hasOwnProperty(i)) continue
-      const { fileName = '', extname = '' } = imgList[i]
+    const url = getHost(customUrl)
+    for (const img of imgList) {
+      const { fileName = '', extname = '' } = img
       const { signature, date } = generateSignature(qingstorOptions, fileName, extname)
-      const image = imgList[i].buffer ?? (imgList[i].base64Image ? Buffer.from(imgList[i].base64Image as string, 'base64') : undefined)
+      const image = img.buffer ?? (img.base64Image ? Buffer.from(img.base64Image, 'base64') : undefined)
       if (!image) continue
       const options = uploadOptions(qingstorOptions, fileName, signature, image, extname, date)
       await ctx.request(options)
-      delete imgList[i].base64Image
-      delete imgList[i].buffer
-      const url = getHost(customUrl)
-      imgList[i].imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${fileName}`
+      delete img.base64Image
+      delete img.buffer
+      img.imgUrl = `${url.protocol}://${qingstorOptions.bucket}.${qingstorOptions.zone}.${url.host}${path}/${fileName}`
     }
     return ctx
   } catch (err) {
@@ -43,7 +42,7 @@ export = (ctx: IPicGo) => {
   const register = () => {
     ctx.helper.uploader.register('qingstor-uploader', {
       handle,
-      name: '青云 QingStor ',
+      name: '青云 QingStor',
       config
     })
   }
