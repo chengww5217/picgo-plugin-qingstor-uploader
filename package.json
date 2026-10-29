@@ -19,7 +19,9 @@
     "build": "rm -rf dist && tsc -p .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.js\"",
-    "prepublishOnly": "npm run format:check && npm test"
+    "prepublishOnly": "npm run format:check && npm test",
+    "preversion": "npm run format:check && npm test",
+    "postversion": "git push --follow-tags"
   },
   "keywords": [
     "picgo",

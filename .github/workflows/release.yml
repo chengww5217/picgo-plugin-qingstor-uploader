@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # 创建 GitHub Release
+  id-token: write # npm Trusted Publishing（OIDC），无需 NPM_TOKEN
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          # 发布流程不使用缓存，避免缓存污染影响发布产物
+      - name: 检查 npm 版本（Trusted Publishing 需要 >= 11.5.1）
+        run: |
+          npm --version
+          node -e "const [a,b,c]=process.argv[1].split('.').map(Number);process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm --version)" \
+            || npm install -g npm@11
+      - run: npm ci
+
+      - name: 校验 tag 与 package.json 版本一致
+        id: version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::tag ($GITHUB_REF_NAME) 与 package.json 版本 ($PKG_VERSION) 不一致"
+            exit 1
+          fi
+          # 带 "-" 的版本（如 1.3.0-beta.1）视为预发布
+          if [[ "$PKG_VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # prepublishOnly 会执行 format:check 和 test（含 build）
+      # 通过 OIDC 认证，公开仓库 + 公开包会自动生成 provenance
+      - name: 发布到 npm
+        run: |
+          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
+            npm publish --tag next
+          else
+            npm publish
+          fi
+
+      - name: 创建 GitHub Release
+        run: |
+          ARGS="--generate-notes --verify-tag"
+          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
+            ARGS="$ARGS --prerelease"
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" $ARGS
+        env:
+          GH_TOKEN: ${{ github.token }}
