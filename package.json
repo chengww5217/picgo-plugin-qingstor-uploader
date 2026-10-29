@@ -3,7 +3,6 @@
   "version": "1.2.7",
   "description": "青云 QingStor（青云对象存储）图床插件 / PicGo uploader for QingCloud object storage",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
@@ -17,7 +16,7 @@
   },
   "scripts": {
     "test": "npm run build && node --test",
-    "build": "tsc -p .",
+    "build": "rm -rf dist && tsc -p .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.js\"",
     "prepublishOnly": "npm run format:check && npm test"
